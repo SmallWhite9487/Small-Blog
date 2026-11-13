@@ -1,13 +1,124 @@
 <!DOCTYPE html>
 <html lang="zh-tw">
-<head>
-    <meta charset="UTF-8">
-    <title>Small Blog</title>
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <title>Small Blog</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
 
-<body>
-<h1>歡迎來到 Small Blog</h1>
-<p>這是一個簡單的部落格範例。</p>
-<p>請在下方留言分享你的想法：</p>
-</body>
+    <body class="github-body">
+        <!-- 橫幅 -->
+        <header class="top-banner"> 
+            <img src="items/Top-Banner.jpg" alt="Image-Top-Banner">
+            <!-- 橫幅文字 -->
+            <div class="banner-text"> 
+                <h1>In solitude, <br>where we are least alone.</h1>
+                <p>「ヨスガノソラ」</p>
+            </div>
+            <!-- 隱藏模式切換小三角 -->
+            <button class="secret-toggle" id="secret-toggle" aria-label="切換顯示模式"></button>
+        </header>
+        
+        <!-- 主要佈局 -->
+        <div class="main-layout"> 
+            <!-- 左側欄 -->
+            <aside class="sidebar">
+                <!-- 個人資料卡 -->
+                <div class="profile-card"> 
+                <img class="card-avatar" src="items/Avatar.jpg" alt="Image-Avatar">
+                <h2 class="profile-name" id="profile-name"><ruby>Terry <rt>テリー</rt></ruby> <ruby>Weng<rt>オウ</rt></ruby></h2>
+                <div class="name-divider" id="name-divider"></div>
+                <p class="profile-bio" id="profile-bio">Small White・He/His</p>
+
+                <!-- 社交鏈接 -->
+                <div class="social-links"> 
+                        <a class="icon-btn" href="https://github.com/SmallWhite9487" target="_blank" title="GitHub">
+                            <img src="items/icons/icon-github.png" alt="ICON-GitHub">
+                        </a>
+                        <a class="icon-btn" href="https://forms.gle/UdbqFBGMmfMfpLYX6" target="_blank" title="Gmail">
+                            <img src="items/icons/icon-gmail.webp" alt="ICON-Gmail">
+                        </a>
+
+                        <a class="icon-btn" href="https://discord.com/users/smallwhite9487" target="_blank" title="Discord">
+                            <img src="items/icons/icon-discord.png" alt="ICON-Discord">
+                        </a>
+                </div>
+                </div>
+
+                <!-- 倒數小卡片 -->
+                <div class="time-card">
+                    <div class="time-label">東京時間 (JST)</div>
+                    <div class="tokyo-time" id="tokyo-time">--:--:--</div>
+                    <div class="countdown" id="countdown">載入中…</div>
+                </div>
+            </aside>
+
+            <!-- 博客列表 -->
+            <main class="blog-list"> 
+                <article class="card-blogs">
+                    <div class="card-header">
+                        <h2>Test Blog 1 Title</h2>
+                        <div class="card-types">Test Blog 1 Time</div>
+                    </div>
+                    <p>Test Blog 1 Content</p>
+                </article>
+
+                <article class="card-blogs">
+                    <div class="card-header">
+                        <h2>Test Blog 2 Title</h2>
+                        <div class="card-types">Test Blog 2 Time</div>
+                    </div>
+                    <p>Test Blog 2 Content</p>
+                </article>
+
+                <article class="card-blogs">
+                    <div class="card-header">
+                        <h2>Test Blog 3 Title</h2>
+                        <div class="card-types">Test Blog 3 Time</div>
+                    </div>
+                    <p>Test Blog 3 Content</p>
+                </article>
+
+                <article class="card-blogs">
+                    <div class="card-header">
+                        <h2>Test Blog 4 Title</h2>
+                        <div class="card-types">Test Blog 4 Time</div>
+                    </div>
+                    <p>Test Blog 4 Content</p>
+                </article>
+
+                <article class="card-blogs">
+                    <div class="card-header">
+                        <h2>Test Blog 5 Title</h2>
+                        <div class="card-types">Test Blog 5 Time</div>
+                    </div>
+                    <p>Test Blog 5 Content</p>
+                </article>
+
+                <article class="card-blogs">
+                    <div class="card-header">
+                        <h2>Test Blog 6 Title</h2>
+                        <div class="card-types">Test Blog 6 Time</div>
+                    </div>
+                    <p>Test Blog 6 Content</p>
+                </article>
+            </main>
+        </div>
+
+        <!-- 倒數計時腳本 -->
+        <script src="script.js"></script>
+    </body>
 </html>
+
+<!-- Source ->
+Image-Top-Banner : https://truth.bahamut.com.tw/s01/201110/92c4ad2548060b811ceec197b70dc4b8.JPG
+Image-Avatar : https://i.pinimg.com/736x/a9/55/7f/a9557f254acbc2c36e1647ea9012d0e9.jpg
+ICON-GitHub : https://cdn-icons-png.flaticon.com/512/25/25231.png
+ICON-Gmail : https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8f/Gmail_icon_%282026%29.svg/3840px-Gmail_icon_%282026%29.svg.png?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=thumbnail
+ICON-Discord : https://freepngimg.com/thumb/discord/95835-discord-logo.png
+<- Source -->
+ 
+<!-- 致謝 -->
+<!-- 雖然我不知道你為什麼會看到這裡，但是謝謝你的關注，陌生人！祝你有美好的一天！-->
+<!-- 我也會朝著自己的目標努力，期待未來的某一天，能夠實現自己的夢想。-->
+<!-- 你也要加油哦！陌生人！-->

@@ -1,0 +1,238 @@
+.github-body { /* GitHub 風格主題 */
+    background-color: #0d1117;
+    color: #e6edf3;
+    font-family: system-ui, -apple-system, sans-serif;
+    margin: 0;
+    padding-bottom: 48px;
+}
+.top-banner { /* 頂部橫幅 */
+    position: relative;
+    width: calc(100% - 48px);
+    max-width: 1440px;
+    margin: 20px auto 0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.top-banner img { /* 頂部橫幅圖片 */
+    display: block;
+    width: 100%;
+    max-height: 460px;
+    object-fit: cover;
+}
+.banner-text { /* 頂部橫幅文字 */
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 55%;
+    padding: 16px clamp(16px, 4vw, 48px);
+    background: linear-gradient(to right, transparent, rgba(13, 17, 23, 0.75));
+    color: #ffffff;
+    text-align: right;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+    animation: banner-slide-in 0.85s ease-out both;
+}
+.banner-text h1 { /* 頂部橫幅標題 */
+    margin: 0 0 8px;
+    font-size: clamp(20px, 4vw, 36px);
+    overflow-wrap: anywhere;
+}
+.banner-text p { /* 頂部橫幅段落 */
+    margin: 0;
+    font-size: clamp(12px, 2vw, 18px);
+    overflow-wrap: anywhere;
+}
+@keyframes banner-slide-in { /* 頂部橫幅滑入動畫 */
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+@media (prefers-reduced-motion: reduce) { /* 減少動畫模式 */
+    .banner-text {
+        animation: none;
+    }
+}
+.secret-toggle { /* 左下角小三角按鈕（透明點擊區域較大，視覺三角很小） */
+    position: absolute;
+    left: 2px;
+    bottom: 2px;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+.secret-toggle::before { /* 實際顯示的小三角 */
+    content: "";
+    position: absolute;
+    left: 6px;
+    bottom: 6px;
+    width: 0;
+    height: 0;
+    border-left: 12px solid rgba(230, 237, 243, 0.25);
+    border-top: 12px solid transparent;
+    transition: border-left-color 0.2s;
+}
+.secret-toggle:hover::before { /* 懸停時變亮 */
+    border-left-color: rgba(230, 237, 243, 0.7);
+}
+.main-layout { /* 主體左右分欄容器 */
+    display: flex;
+    align-items: flex-start;
+    gap: 28px;
+    width: calc(100% - 48px);
+    max-width: 1440px;
+    margin: 28px auto 0;
+}
+.sidebar { /* 左側欄（個人卡＋時間卡） */
+    width: 320px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+.time-card { /* 東京時間小卡片 */
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 16px 20px;
+    text-align: center;
+}
+.time-label { /* 時間卡標籤 */
+    font-size: 13px;
+    color: #8b949e;
+    margin-bottom: 6px;
+}
+.tokyo-time { /* 東京時間顯示 */
+    font-size: 22px;
+    font-variant-numeric: tabular-nums;
+    color: #ffffff;
+}
+.countdown { /* 倒數天數 */
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #30363d;
+    font-size: 14px;
+    color: #8b949e;
+}
+.countdown strong { /* 倒數天數數字 */
+    color: #58a6ff;
+    font-size: 18px;
+}
+.countdown-row + .countdown-row { /* 多個目標間距 */
+    margin-top: 6px;
+}
+.profile-card { /* 左側個人資料卡片 */
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+}
+.card-avatar { /* 個人頭像 */
+    width: 280px;
+    height: 280px;
+    border-radius: 24px;
+    object-fit: cover;
+    border: 2px solid #30363d;
+}
+.profile-name { /* 個人名稱 */
+    margin: 16px 0 8px;
+    font-size: 24px;
+    color: #ffffff;
+}
+.name-divider { /* 名字下方分割線（預設天藍色） */
+    width: 70%;
+    height: 4px;
+    margin: 0 auto 12px;
+    border-radius: 2px;
+    background: #87ceeb;
+}
+.name-divider.trans { /* 隱藏模式：跨性別旗配色 */
+    background: linear-gradient(to right,
+        #5bcefa 0 20%,
+        #f5a9b8 20% 40%,
+        #ffffff 40% 60%,
+        #f5a9b8 60% 80%,
+        #5bcefa 80% 100%);
+}
+.profile-bio { /* 個人簡介 */
+    font-size: 16px;
+    color: #8b949e;
+    margin: 0 0 20px;
+}
+.blog-list { /* 右側部落格列表 */
+    flex: 1;
+}
+.card-blogs { /* 部落格卡片 */
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+}
+.card-header { /* 標題與時間同行容器 */
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+.card-types { /* 部落格時間 */
+    font-size: 14px;
+    color: #6e7681;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.card-blogs h2 { /* 部落格標題 */
+    margin: 0;
+    font-size: 26px;
+}
+.card-blogs p { /* 部落格內容 */
+    margin: 0;
+    color: #8b949e;
+    font-size: 17px;
+    line-height: 1.6;
+}
+.social-links { /* 社交鏈接容器 */
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 20px;
+}
+.icon-btn { /* 單個圖標按鈕 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    background-color: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    transition: all 0.2s;
+}
+.icon-btn img { /* 圖標圖片 */
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+}
+.icon-btn:hover { /* 懸停效果 */
+    background-color: #30363d;
+    border-color: #8b949e;
+    transform: translateY(-2px);
+}
+rt { /* ruby 注音標註 */
+    font-size: 0.5em;
+    color: #e6edf3;
+    font-weight: normal;
+}
