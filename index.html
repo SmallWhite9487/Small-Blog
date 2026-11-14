@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>千穹日記 - ちそらにっき</title>
-        <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="style.css?v=20261115-1">
     </head>
 
     <body class="github-body">
@@ -64,10 +64,7 @@
                 <section id="article-reader" class="article-reader" hidden>
                     <div class="reader-toolbar">
                         <button type="button" class="back-to-list" id="back-to-list">← 返回文章列表</button>
-                        <label class="furigana-setting">
-                            <input type="checkbox" id="show-furigana" aria-controls="article-content" checked>
-                            顯示假名
-                        </label>
+                        <button type="button" class="furigana-setting" id="show-furigana" aria-controls="article-content" aria-pressed="true">顯示假名：開</button>
                     </div>
                     <p class="reading-preference-status" id="reading-preference-status" role="status" hidden></p>
                     <div id="article-content" class="article-content" aria-live="polite"></div>
@@ -88,7 +85,7 @@
         <script src="https://cdn.jsdelivr.net/npm/marked@15.0.12/marked.min.js" integrity="sha384-948ahk4ZmxYVYOc+rxN1H2gM1EJ2Duhp7uHtZ4WSLkV4Vtx5MUqnV+l7u9B+jFv+" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js" integrity="sha384-JEyTNhjM6R1ElGoJns4U2Ln4ofPcqzSsynQkmEc/KGy6336qAZl70tDLufbkla+3" crossorigin="anonymous"></script>
         <script src="markdown-extensions.js"></script>
-        <script src="blog.js"></script>
+        <script src="blog.js?v=20261115-1"></script>
     </body>
 </html>
 

@@ -318,7 +318,7 @@
     border-radius: 12px;
     padding: 28px 32px;
 }
-.back-to-list { /* 返回文章列表按鈕 */
+.back-to-list, .furigana-setting { /* 閱讀器按鈕 */
     color: #58a6ff;
     background: none;
     border: 1px solid #30363d;
@@ -334,22 +334,12 @@
     flex-wrap: wrap;
     gap: 12px;
 }
-.furigana-setting {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    font-size: 14px;
-}
-.furigana-setting input {
-    accent-color: #58a6ff;
-}
 .reading-preference-status {
     margin: 12px 0 0;
     color: #e3b341;
     font-size: 14px;
 }
-.back-to-list:hover { /* 返回文章列表按鈕懸停效果 */
+.back-to-list:hover, .furigana-setting:hover { /* 按鈕懸停效果 */
     background-color: #21262d;
 }
 .article-content { /* 文章內容容器 */

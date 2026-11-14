@@ -5,6 +5,7 @@ const backButton = document.getElementById('back-to-list');
 const furiganaToggle = document.getElementById('show-furigana');
 const preferenceStatus = document.getElementById('reading-preference-status');
 const furiganaPreferenceKey = 'show-furigana';
+let showFurigana = true;
 let currentRequest;
 let lastLink;
 let currentArticle;
@@ -18,16 +19,22 @@ function reportPreferenceError(error) {
 
 try {
     const preference = localStorage.getItem(furiganaPreferenceKey);
-    if (preference === 'false') furiganaToggle.checked = false;
+    if (preference === 'false') showFurigana = false;
 } catch (error) {
     reportPreferenceError(error);
 }
-content.classList.toggle('hide-furigana', !furiganaToggle.checked);
+function updateFurigana() {
+    content.classList.toggle('hide-furigana', !showFurigana);
+    furiganaToggle.setAttribute('aria-pressed', String(showFurigana));
+    furiganaToggle.textContent = showFurigana ? '顯示假名：開' : '顯示假名：關';
+}
+updateFurigana();
 
-furiganaToggle.addEventListener('change', () => {
-    content.classList.toggle('hide-furigana', !furiganaToggle.checked);
+furiganaToggle.addEventListener('click', () => {
+    showFurigana = !showFurigana;
+    updateFurigana();
     try {
-        localStorage.setItem(furiganaPreferenceKey, String(furiganaToggle.checked));
+        localStorage.setItem(furiganaPreferenceKey, String(showFurigana));
         preferenceStatus.hidden = true;
     } catch (error) {
         reportPreferenceError(error);
