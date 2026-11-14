@@ -61,6 +61,7 @@ document.getElementById("secret-toggle").addEventListener("click", function () {
         secretMode ? SECRET_BIO : DEFAULT_BIO;
     document.getElementById("name-divider").classList.toggle("trans", secretMode);
     document.getElementById("footer-divider").classList.toggle("trans", secretMode);
+    document.getElementById("banner-progress").classList.toggle("trans", secretMode);
     updateClock();
 });
 

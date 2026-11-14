@@ -12,11 +12,31 @@
     margin: 20px auto 0;
     border-radius: 12px;
     overflow: hidden;
+    aspect-ratio: 16 / 9;
+    max-height: 460px;
+}
+.banner-slide {
+    position: absolute;
+    inset: 0;
+}
+.banner-slide.entering {
+    animation: banner-enter 0.55s ease-in-out both;
+}
+.banner-slide.leaving {
+    animation: banner-leave 0.55s ease-in-out both;
+}
+@keyframes banner-enter {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+@keyframes banner-leave {
+    from { transform: translateX(0); }
+    to { transform: translateX(-100%); }
 }
 .top-banner img { /* 頂部橫幅圖片 */
     display: block;
     width: 100%;
-    max-height: 460px;
+    height: 100%;
     object-fit: cover;
 }
 .banner-text { /* 頂部橫幅文字 */
@@ -36,6 +56,35 @@
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
     animation: banner-slide-in 0.85s ease-out both;
 }
+.banner-text.left {
+    right: auto;
+    left: 0;
+    --banner-text-start: -100%;
+    text-align: left;
+    background: linear-gradient(to left, transparent, rgba(13, 17, 23, 0.75));
+}
+.banner-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    opacity: 0.5;
+    background: #87ceeb;
+    clip-path: inset(0 100% 0 0);
+    animation: banner-progress-fill var(--banner-duration) linear forwards;
+}
+.banner-progress.trans {
+    background: linear-gradient(to right,
+        #5bcefa 0 20%,
+        #f5a9b8 20% 40%,
+        #ffffff 40% 60%,
+        #f5a9b8 60% 80%,
+        #5bcefa 80% 100%);
+}
+@keyframes banner-progress-fill {
+    to { clip-path: inset(0 0 0 0); }
+}
 .banner-text h1 { /* 頂部橫幅標題 */
     margin: 0 0 8px;
     font-size: clamp(20px, 4vw, 36px);
@@ -49,7 +98,7 @@
 @keyframes banner-slide-in { /* 頂部橫幅滑入動畫 */
     from {
         opacity: 0;
-        transform: translateX(100%);
+        transform: translateX(var(--banner-text-start, 100%));
     }
     to {
         opacity: 1;
@@ -57,8 +106,12 @@
     }
 }
 @media (prefers-reduced-motion: reduce) { /* 減少動畫模式 */
-    .banner-text {
+    .banner-text, .banner-slide.entering, .banner-slide.leaving {
         animation: none;
+    }
+    .banner-progress {
+        animation: none;
+        clip-path: inset(0);
     }
 }
 .secret-toggle { /* 左下角小三角按鈕（透明點擊區域較大，視覺三角很小） */
@@ -79,9 +132,10 @@
     bottom: 6px;
     width: 0;
     height: 0;
-    border-left: 12px solid rgba(230, 237, 243, 0.25);
-    border-top: 12px solid transparent;
+    border-left: 10px solid rgba(230, 237, 243, 0.25);
+    border-top: 10px solid transparent;
     transition: border-left-color 0.2s;
+    opacity: 0.15;
 }
 .secret-toggle:hover::before { /* 懸停時變亮 */
     border-left-color: rgba(230, 237, 243, 0.7);
@@ -139,7 +193,7 @@
     padding: 24px;
     text-align: center;
 }
-.profile-image {
+.profile-image { /* 個人頭像容器 */
     position: relative;
     display: inline-block;
 }
@@ -187,6 +241,11 @@
     border-radius: 12px;
     padding: 28px 32px;
     margin-bottom: 24px;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+.card-blogs:hover {
+    background-color: #1c232d;
+    border-color: #586574;
 }
 .card-header { /* 標題與時間同行容器 */
     display: flex;
@@ -207,6 +266,7 @@
 }
 .card-blogs h2 a { /* 部落格標題連結 */
     color: inherit;
+    text-decoration: none;
 }
 .card-blogs h2 a::after { /* 部落格標題連結覆蓋層 */
     content: "";
