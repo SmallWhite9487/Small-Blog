@@ -395,6 +395,9 @@ rt { /* ruby 注音標註 */
 footer { /* 頁腳 */
     color: #8b949e;
     text-align: center;
+    width: calc(100% - 48px);
+    max-width: 1440px;
+    margin: 0 auto;
     padding: 0px 0;
     font-size: 12px;
 }
