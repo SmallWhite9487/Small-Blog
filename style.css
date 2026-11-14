@@ -139,7 +139,12 @@
     padding: 24px;
     text-align: center;
 }
+.profile-image {
+    position: relative;
+    display: inline-block;
+}
 .card-avatar { /* 個人頭像 */
+    display: block;
     width: 280px;
     height: 280px;
     border-radius: 24px;
@@ -173,8 +178,10 @@
 }
 .blog-list { /* 右側部落格列表 */
     flex: 1;
+    min-width: 0;
 }
 .card-blogs { /* 部落格卡片 */
+    position: relative;
     background-color: #161b22;
     border: 1px solid #30363d;
     border-radius: 12px;
@@ -198,11 +205,100 @@
     margin: 0;
     font-size: 26px;
 }
+.card-blogs h2 a { /* 部落格標題連結 */
+    color: inherit;
+}
+.card-blogs h2 a::after { /* 部落格標題連結覆蓋層 */
+    content: "";
+    position: absolute;
+    inset: 0;
+}
+.card-blogs:focus-within { /* 部落格卡片獲得焦點時 */
+    outline: 2px solid #58a6ff;
+    outline-offset: 2px;
+}
 .card-blogs p { /* 部落格內容 */
     margin: 0;
     color: #8b949e;
     font-size: 17px;
     line-height: 1.6;
+}
+.excerpt-preview { /* 摘要預覽容器 */
+    position: relative;
+    pointer-events: none;
+}
+.article-excerpt { /* 文章摘要 */
+    max-height: 3.2em;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+.excerpt-preview.is-overflowing .article-excerpt { /* 溢出時遮罩效果 */
+    -webkit-mask-image: linear-gradient(to right, #000 65%, transparent 100%);
+    mask-image: linear-gradient(to right, #000 65%, transparent 100%);
+}
+.excerpt-preview.is-overflowing::after { /* 溢出時顯示省略號 */
+    content: "...";
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    color: #8b949e;
+}
+.article-word-count { /* 文章字數 */
+    margin-top: 12px;
+    color: #6e7681;
+    font-size: 14px;
+}
+.article-reader { /* 文章閱讀器容器 */
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 28px 32px;
+}
+.back-to-list { /* 返回文章列表按鈕 */
+    color: #58a6ff;
+    background: none;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font: inherit;
+}
+.back-to-list:hover { /* 返回文章列表按鈕懸停效果 */
+    background-color: #21262d;
+}
+.article-content { /* 文章內容容器 */
+    margin-top: 24px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+.article-content a { /* 文章內容中的連結 */
+    color: #58a6ff;
+}
+.article-content img { /* 文章內容中的圖片 */
+    max-width: 100%;
+    height: auto;
+}
+.article-content pre { /* 文章內容中的程式碼區塊 */
+    overflow-x: auto;
+    padding: 16px;
+    background-color: #0d1117;
+    border-radius: 6px;
+}
+.article-content blockquote { /* 文章內容中的引用區塊 */
+    margin-left: 0;
+    padding-left: 16px;
+    border-left: 4px solid #30363d;
+    color: #8b949e;
+}
+.article-content table { /* 文章內容中的表格 */
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+}
+.article-content th, .article-content td { /* 文章內容中的表格單元格 */
+    border: 1px solid #30363d;
+    padding: 6px 12px;
 }
 .social-links { /* 社交鏈接容器 */
     display: flex;
@@ -235,4 +331,26 @@ rt { /* ruby 注音標註 */
     font-size: 0.5em;
     color: #e6edf3;
     font-weight: normal;
+}
+footer { /* 頁腳 */
+    color: #8b949e;
+    text-align: center;
+    padding: 0px 0;
+    font-size: 12px;
+}
+.footer-divider { /* 頁腳分割線 */
+    width: 50%;
+    height: 4px;
+    margin: 0 auto 12px;
+    border-radius: 2px;
+    background: #87ceeb;
+    opacity: 0.5;
+}
+.footer-divider.trans { /* 隱藏模式：跨性別旗配色 */
+    background: linear-gradient(to right,
+        #5bcefa 0 20%,
+        #f5a9b8 20% 40%,
+        #ffffff 40% 60%,
+        #f5a9b8 60% 80%,
+        #5bcefa 80% 100%);
 }

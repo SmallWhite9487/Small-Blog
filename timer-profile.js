@@ -24,6 +24,7 @@ var timeFmt = new Intl.DateTimeFormat("ja-JP", {
 });
 var dateFmt = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tokyo" });
 
+// ===== 計算距離目標的天數 =====
 function daysUntil(dateStr, today) {
     var t = dateStr.split("-");
     return Math.round(
@@ -32,6 +33,7 @@ function daysUntil(dateStr, today) {
     );
 }
 
+// ===== 更新時鐘 =====
 function updateClock() {
     var now = new Date();
     document.getElementById("tokyo-time").textContent = timeFmt.format(now);
@@ -50,6 +52,7 @@ function updateClock() {
     document.getElementById("countdown").innerHTML = rows.join("");
 }
 
+// ===== 切換隱藏模式 =====
 document.getElementById("secret-toggle").addEventListener("click", function () {
     secretMode = !secretMode;
     document.getElementById("profile-name").innerHTML =
@@ -57,6 +60,7 @@ document.getElementById("secret-toggle").addEventListener("click", function () {
     document.getElementById("profile-bio").innerHTML =
         secretMode ? SECRET_BIO : DEFAULT_BIO;
     document.getElementById("name-divider").classList.toggle("trans", secretMode);
+    document.getElementById("footer-divider").classList.toggle("trans", secretMode);
     updateClock();
 });
 
