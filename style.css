@@ -15,21 +15,21 @@
     aspect-ratio: 16 / 9;
     max-height: 460px;
 }
-.banner-slide {
+.banner-slide { /* 橫幅幻燈片 */
     position: absolute;
     inset: 0;
 }
-.banner-slide.entering {
+.banner-slide.entering { /* 幻燈片進入動畫 */
     animation: banner-enter 0.55s ease-in-out both;
 }
-.banner-slide.leaving {
+.banner-slide.leaving { /* 幻燈片離開動畫 */
     animation: banner-leave 0.55s ease-in-out both;
 }
-@keyframes banner-enter {
+@keyframes banner-enter { /* 幻燈片進入動畫關鍵幀 */
     from { transform: translateX(100%); }
     to { transform: translateX(0); }
 }
-@keyframes banner-leave {
+@keyframes banner-leave { /* 幻燈片離開動畫關鍵幀 */
     from { transform: translateX(0); }
     to { transform: translateX(-100%); }
 }
@@ -56,14 +56,14 @@
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
     animation: banner-slide-in 0.85s ease-out both;
 }
-.banner-text.left {
+.banner-text.left { /* 左側橫幅文字 */
     right: auto;
     left: 0;
     --banner-text-start: -100%;
     text-align: left;
     background: linear-gradient(to left, transparent, rgba(13, 17, 23, 0.75));
 }
-.banner-progress {
+.banner-progress { /* 橫幅進度條 */
     position: absolute;
     bottom: 0;
     left: 0;
@@ -74,7 +74,7 @@
     clip-path: inset(0 100% 0 0);
     animation: banner-progress-fill var(--banner-duration) linear forwards;
 }
-.banner-progress.trans {
+.banner-progress.trans { /* 彩色漸變進度條 */
     background: linear-gradient(to right,
         #5bcefa 0 20%,
         #f5a9b8 20% 40%,
@@ -82,15 +82,15 @@
         #f5a9b8 60% 80%,
         #5bcefa 80% 100%);
 }
-@keyframes banner-progress-fill {
+@keyframes banner-progress-fill { /* 進度條填充動畫 */
     to { clip-path: inset(0 0 0 0); }
 }
-.banner-text h1 { /* 頂部橫幅標題 */
+.banner-text h1 { /* 頂部橫幅標題文字 */
     margin: 0 0 8px;
     font-size: clamp(20px, 4vw, 36px);
     overflow-wrap: anywhere;
 }
-.banner-text p { /* 頂部橫幅段落 */
+.banner-text p { /* 頂部橫幅段落文字 */
     margin: 0;
     font-size: clamp(12px, 2vw, 18px);
     overflow-wrap: anywhere;
@@ -135,7 +135,7 @@
     border-left: 10px solid rgba(230, 237, 243, 0.25);
     border-top: 10px solid transparent;
     transition: border-left-color 0.2s;
-    opacity: 0.05;
+    opacity: 0.15;
 }
 .secret-toggle:hover::before { /* 懸停時變亮 */
     border-left-color: rgba(230, 237, 243, 0.7);
@@ -288,20 +288,24 @@
     pointer-events: none;
 }
 .article-excerpt { /* 文章摘要 */
-    max-height: 3.2em;
-    overflow: hidden;
+    color: #8b949e;
+    font-size: 17px;
+    line-height: 1.6;
     overflow-wrap: anywhere;
 }
-.excerpt-preview.is-overflowing .article-excerpt { /* 溢出時遮罩效果 */
-    -webkit-mask-image: linear-gradient(to right, #000 65%, transparent 100%);
-    mask-image: linear-gradient(to right, #000 65%, transparent 100%);
+.card-blogs .article-excerpt p {
+    margin: 1em 0;
+    color: inherit;
+    font-size: inherit;
+    line-height: inherit;
 }
-.excerpt-preview.is-overflowing::after { /* 溢出時顯示省略號 */
-    content: "...";
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    color: #8b949e;
+.article-excerpt.html-excerpt { /* HTML 摘要限制高度 */
+    max-height: 4.8em;
+    overflow: hidden;
+}
+.article-excerpt.is-truncated {
+    -webkit-mask-image: linear-gradient(to bottom, #000 65%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 65%, transparent 100%);
 }
 .article-word-count { /* 文章字數 */
     margin-top: 12px;
@@ -323,6 +327,28 @@
     cursor: pointer;
     font: inherit;
 }
+.reader-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.furigana-setting {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.furigana-setting input {
+    accent-color: #58a6ff;
+}
+.reading-preference-status {
+    margin: 12px 0 0;
+    color: #e3b341;
+    font-size: 14px;
+}
 .back-to-list:hover { /* 返回文章列表按鈕懸停效果 */
     background-color: #21262d;
 }
@@ -331,34 +357,54 @@
     line-height: 1.7;
     overflow-wrap: anywhere;
 }
-.article-content a { /* 文章內容中的連結 */
+.article-content.hide-furigana rt,
+.article-content.hide-furigana rp {
+    display: none;
+}
+.article-content a, .article-excerpt a { /* 文章內容中的連結 */
     color: #58a6ff;
 }
-.article-content img { /* 文章內容中的圖片 */
+.article-content img, .article-excerpt img { /* 文章內容中的圖片 */
     max-width: 100%;
     height: auto;
 }
-.article-content pre { /* 文章內容中的程式碼區塊 */
+.article-content pre, .article-excerpt pre { /* 文章內容中的程式碼區塊 */
     overflow-x: auto;
     padding: 16px;
     background-color: #0d1117;
     border-radius: 6px;
 }
-.article-content blockquote { /* 文章內容中的引用區塊 */
+.article-content blockquote, .article-excerpt blockquote { /* 文章內容中的引用區塊 */
     margin-left: 0;
     padding-left: 16px;
     border-left: 4px solid #30363d;
     color: #8b949e;
 }
-.article-content table { /* 文章內容中的表格 */
+.article-content table, .article-excerpt table { /* 文章內容中的表格 */
     display: block;
     max-width: 100%;
     overflow-x: auto;
     border-collapse: collapse;
 }
-.article-content th, .article-content td { /* 文章內容中的表格單元格 */
+.article-content th, .article-content td, .article-excerpt th, .article-excerpt td { /* 文章內容中的表格單元格 */
     border: 1px solid #30363d;
     padding: 6px 12px;
+}
+@media (max-width: 700px) {
+    .main-layout {
+        flex-direction: column;
+    }
+    .sidebar, .blog-list {
+        width: 100%;
+    }
+    .profile-image {
+        max-width: 100%;
+    }
+    .card-avatar {
+        max-width: 100%;
+        height: auto;
+        box-sizing: border-box;
+    }
 }
 .social-links { /* 社交鏈接容器 */
     display: flex;
@@ -409,7 +455,7 @@ footer { /* 頁腳 */
     background: #87ceeb;
     opacity: 0.5;
 }
-.footer-divider.trans { /* 隱藏模式：跨性別旗配色 */
+.footer-divider.trans { /* 隱藏模式 */
     background: linear-gradient(to right,
         #5bcefa 0 20%,
         #f5a9b8 20% 40%,

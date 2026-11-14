@@ -2,6 +2,7 @@
 <html lang="zh-tw">
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>千穹日記 - ちそらにっき</title>
         <link rel="stylesheet" href="style.css">
     </head>
@@ -61,7 +62,14 @@
             <main class="blog-list">
                 <div id="blog-list"></div>
                 <section id="article-reader" class="article-reader" hidden>
-                    <button type="button" class="back-to-list" id="back-to-list">← 返回文章列表</button>
+                    <div class="reader-toolbar">
+                        <button type="button" class="back-to-list" id="back-to-list">← 返回文章列表</button>
+                        <label class="furigana-setting">
+                            <input type="checkbox" id="show-furigana" aria-controls="article-content" checked>
+                            顯示假名
+                        </label>
+                    </div>
+                    <p class="reading-preference-status" id="reading-preference-status" role="status" hidden></p>
                     <div id="article-content" class="article-content" aria-live="polite"></div>
                 </section>
             </main>

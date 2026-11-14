@@ -2,10 +2,37 @@ const list = document.getElementById('blog-list');
 const reader = document.getElementById('article-reader');
 const content = document.getElementById('article-content');
 const backButton = document.getElementById('back-to-list');
+const furiganaToggle = document.getElementById('show-furigana');
+const preferenceStatus = document.getElementById('reading-preference-status');
+const furiganaPreferenceKey = 'show-furigana';
 let currentRequest;
 let lastLink;
 let currentArticle;
 const cardPreviews = [];
+
+function reportPreferenceError(error) {
+    console.error('假名顯示設定無法儲存或讀取:', error);
+    preferenceStatus.textContent = '無法讀取或儲存假名設定，本次選擇僅在此頁面生效。';
+    preferenceStatus.hidden = false;
+}
+
+try {
+    const preference = localStorage.getItem(furiganaPreferenceKey);
+    if (preference === 'false') furiganaToggle.checked = false;
+} catch (error) {
+    reportPreferenceError(error);
+}
+content.classList.toggle('hide-furigana', !furiganaToggle.checked);
+
+furiganaToggle.addEventListener('change', () => {
+    content.classList.toggle('hide-furigana', !furiganaToggle.checked);
+    try {
+        localStorage.setItem(furiganaPreferenceKey, String(furiganaToggle.checked));
+        preferenceStatus.hidden = true;
+    } catch (error) {
+        reportPreferenceError(error);
+    }
+});
 
 function articleUrl(file) {
     return file.split('/').map(encodeURIComponent).join('/');
@@ -35,23 +62,92 @@ function articleText(html) {
     return textOf(template.content).replace(/\s+/g, ' ').trim();
 }
 
-function updateExcerptOverflow() {
-    list.querySelectorAll('.excerpt-preview').forEach(preview => {
-        const text = preview.querySelector('.article-excerpt');
-        preview.classList.toggle('is-overflowing', text.scrollHeight > text.clientHeight + 1);
+function markdownPreview(source) {
+    const tokens = marked.lexer(source);
+    let excerpt = '';
+    let lineCount = 0;
+    let truncated = false;
+    for (const token of tokens) {
+        if (token.type === 'heading') continue;
+        const lines = token.raw.match(/[^\n]*\n|[^\n]+$/g) || [];
+        const containerLine = line => line.replace(/^(?:(?: {0,3}> ?)|(?: {0,3}(?:[-+*]|\d+[.)])\s+))*/, '');
+        let fence = null;
+        for (let index = 0; index < lines.length; index++) {
+            const line = lines[index];
+            const nested = token.type === 'blockquote' || token.type === 'list';
+            const text = nested ? containerLine(line) : line;
+            if (nested) {
+                const marker = /^ {0,3}(`{3,}|~{3,})/.exec(text);
+                if (marker && !fence) {
+                    fence = marker[1];
+                } else if (marker && fence && marker[1][0] === fence[0] && marker[1].length >= fence.length) {
+                    fence = null;
+                } else if (!fence) {
+                    if (/^ {0,3}#{1,6}(?:\s|$)/.test(text)) continue;
+                    if (text.trim() && index + 1 < lines.length &&
+                        /^ {0,3}(?:=+|-+)\s*$/.test(containerLine(lines[index + 1]))) {
+                        index++;
+                        continue;
+                    }
+                }
+            }
+            if (text.trim()) lineCount++;
+            if (lineCount > 3) {
+                truncated = true;
+                break;
+            }
+            if (lineCount < 3 || text.trim()) excerpt += line;
+        }
+        if (truncated) break;
+    }
+
+    const lexer = new marked.Lexer();
+    lexer.tokens.links = tokens.links;
+    const template = document.createElement('template');
+    template.innerHTML = DOMPurify.sanitize(marked.parser(lexer.lex(excerpt)));
+    template.content.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach(heading => heading.remove());
+    return { html: template.innerHTML, truncated };
+}
+
+function updateHtmlPreviewOverflow() {
+    list.querySelectorAll('.html-excerpt').forEach(excerpt => {
+        excerpt.classList.toggle('is-truncated', excerpt.scrollHeight > excerpt.clientHeight + 1);
+    });
+}
+
+function resolveArticleUrls(container, post) {
+    const url = new URL(articleUrl(post.file), document.baseURI);
+    container.querySelectorAll('[href], [src]').forEach(element => {
+        const attribute = element.hasAttribute('href') ? 'href' : 'src';
+        const value = element.getAttribute(attribute);
+        if (value && !value.startsWith('#')) {
+            element.setAttribute(attribute, new URL(value, url).href);
+        }
     });
 }
 
 function renderCardPreview(preview) {
     try {
-        const text = articleText(articleHtml(preview.post, preview.source));
-        preview.excerpt.textContent = text;
+        const html = articleHtml(preview.post, preview.source);
+        const text = articleText(html);
+        if (preview.post.file.toLowerCase().endsWith('.html')) {
+            preview.excerpt.textContent = text;
+            preview.excerpt.classList.add('html-excerpt');
+            updateHtmlPreviewOverflow();
+        } else {
+            const result = markdownPreview(preview.source);
+            preview.excerpt.innerHTML = result.html;
+            preview.excerpt.classList.toggle('is-truncated', result.truncated);
+            resolveArticleUrls(preview.excerpt, preview.post);
+            preview.excerpt.querySelectorAll('a, button, input, select, textarea').forEach(element => {
+                element.tabIndex = -1;
+            });
+        }
         let characters = 0;
         for (const character of text) {
             if (/[\p{L}\p{N}]/u.test(character)) characters++;
         }
         preview.count.textContent = `${characters} 字`;
-        updateExcerptOverflow();
     } catch (err) {
         console.error('載入文章預覽失敗:', err);
         preview.excerpt.textContent = '文章預覽載入失敗。';
@@ -75,20 +171,14 @@ async function loadCardPreview(post, excerpt, count) {
 }
 
 function renderOpenArticle() {
-    const { post, source, url } = currentArticle;
+    const { post, source } = currentArticle;
     try {
         if (!source.trim()) {
             content.textContent = '這篇文章目前沒有內容。';
             return;
         }
         content.innerHTML = articleHtml(post, source);
-        content.querySelectorAll('[href], [src]').forEach(element => {
-            const attribute = element.hasAttribute('href') ? 'href' : 'src';
-            const value = element.getAttribute(attribute);
-            if (value && !value.startsWith('#')) {
-                element.setAttribute(attribute, new URL(value, url).href);
-            }
-        });
+        resolveArticleUrls(content, post);
     } catch (err) {
         console.error('載入文章失敗:', err);
         content.textContent = '文章載入失敗，請稍後再試。';
@@ -112,7 +202,7 @@ async function openArticle(post, link) {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const source = await response.text();
         if (request.signal.aborted) return;
-        currentArticle = { post, source, url };
+        currentArticle = { post, source };
         renderOpenArticle();
     } catch (err) {
         if (request.signal.aborted) return;
@@ -126,7 +216,7 @@ backButton.addEventListener('click', () => {
     reader.hidden = true;
     list.hidden = false;
     currentArticle = null;
-    updateExcerptOverflow();
+    updateHtmlPreviewOverflow();
     if (lastLink) lastLink.focus();
 });
 
@@ -169,7 +259,7 @@ async function renderArticleCards() {
             date.textContent = post.date;
             header.append(title, date);
 
-            const excerpt = document.createElement('p');
+            const excerpt = document.createElement('div');
             excerpt.className = 'article-excerpt';
             excerpt.textContent = '文章預覽載入中…';
             const preview = document.createElement('div');
@@ -190,5 +280,5 @@ async function renderArticleCards() {
     }
 }
 
-new ResizeObserver(updateExcerptOverflow).observe(list);
+new ResizeObserver(updateHtmlPreviewOverflow).observe(list);
 renderArticleCards();
