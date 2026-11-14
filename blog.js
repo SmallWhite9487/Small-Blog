@@ -4,13 +4,16 @@ const content = document.getElementById('article-content');
 const backButton = document.getElementById('back-to-list');
 let currentRequest;
 let lastLink;
+let currentArticle;
+const cardPreviews = [];
 
 function articleUrl(file) {
     return file.split('/').map(encodeURIComponent).join('/');
 }
 
 function articleHtml(post, source) {
-    if (!window.DOMPurify || (!post.file.toLowerCase().endsWith('.html') && !window.marked)) {
+    if (!window.DOMPurify || (!post.file.toLowerCase().endsWith('.html') &&
+        (!window.marked || !window.markdownExtensionsReady))) {
         throw new Error('文章解析工具載入失敗');
     }
     const html = post.file.toLowerCase().endsWith('.html') ? source : marked.parse(source);
@@ -23,6 +26,7 @@ function articleText(html) {
     const blocks = /^(ADDRESS|ARTICLE|BLOCKQUOTE|BR|DIV|H[1-6]|HR|LI|P|PRE|SECTION|TABLE|TD|TH|TR)$/;
     function textOf(node) {
         if (node.nodeType === Node.TEXT_NODE) return node.nodeValue;
+        if (node.nodeType === Node.ELEMENT_NODE && /^(RT|RP)$/.test(node.tagName)) return '';
         const text = Array.from(node.childNodes, textOf).join('');
         return node.nodeType === Node.ELEMENT_NODE && blocks.test(node.tagName)
             ? ` ${text} `
@@ -38,19 +42,31 @@ function updateExcerptOverflow() {
     });
 }
 
+function renderCardPreview(preview) {
+    try {
+        const text = articleText(articleHtml(preview.post, preview.source));
+        preview.excerpt.textContent = text;
+        let characters = 0;
+        for (const character of text) {
+            if (/[\p{L}\p{N}]/u.test(character)) characters++;
+        }
+        preview.count.textContent = `${characters} 字`;
+        updateExcerptOverflow();
+    } catch (err) {
+        console.error('載入文章預覽失敗:', err);
+        preview.excerpt.textContent = '文章預覽載入失敗。';
+        preview.count.textContent = '字數無法取得';
+    }
+}
+
 async function loadCardPreview(post, excerpt, count) {
     try {
         const response = await fetch(articleUrl(post.file));
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const source = await response.text();
-        const text = articleText(articleHtml(post, source));
-        excerpt.textContent = text;
-        let characters = 0;
-        for (const character of text) {
-            if (/[\p{L}\p{N}]/u.test(character)) characters++;
-        }
-        count.textContent = `${characters} 字`;
-        updateExcerptOverflow();
+        const preview = { post, source, excerpt, count };
+        cardPreviews.push(preview);
+        renderCardPreview(preview);
     } catch (err) {
         console.error('載入文章預覽失敗:', err);
         excerpt.textContent = '文章預覽載入失敗。';
@@ -58,22 +74,9 @@ async function loadCardPreview(post, excerpt, count) {
     }
 }
 
-async function openArticle(post, link) {
-    if (currentRequest) currentRequest.abort();
-    const request = new AbortController();
-    currentRequest = request;
-    lastLink = link;
-    list.hidden = true;
-    reader.hidden = false;
-    content.textContent = '文章載入中…';
-    backButton.focus();
-
+function renderOpenArticle() {
+    const { post, source, url } = currentArticle;
     try {
-        const url = new URL(articleUrl(post.file), document.baseURI);
-        const response = await fetch(url, { signal: request.signal });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const source = await response.text();
-        if (request.signal.aborted) return;
         if (!source.trim()) {
             content.textContent = '這篇文章目前沒有內容。';
             return;
@@ -87,6 +90,31 @@ async function openArticle(post, link) {
             }
         });
     } catch (err) {
+        console.error('載入文章失敗:', err);
+        content.textContent = '文章載入失敗，請稍後再試。';
+    }
+}
+
+async function openArticle(post, link) {
+    if (currentRequest) currentRequest.abort();
+    const request = new AbortController();
+    currentRequest = request;
+    currentArticle = null;
+    lastLink = link;
+    list.hidden = true;
+    reader.hidden = false;
+    content.textContent = '文章載入中…';
+    backButton.focus();
+
+    try {
+        const url = new URL(articleUrl(post.file), document.baseURI);
+        const response = await fetch(url, { signal: request.signal });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const source = await response.text();
+        if (request.signal.aborted) return;
+        currentArticle = { post, source, url };
+        renderOpenArticle();
+    } catch (err) {
         if (request.signal.aborted) return;
         console.error('載入文章失敗:', err);
         content.textContent = '文章載入失敗，請稍後再試。';
@@ -97,7 +125,14 @@ backButton.addEventListener('click', () => {
     if (currentRequest) currentRequest.abort();
     reader.hidden = true;
     list.hidden = false;
+    currentArticle = null;
+    updateExcerptOverflow();
     if (lastLink) lastLink.focus();
+});
+
+document.addEventListener('secret-mode-change', () => {
+    cardPreviews.forEach(renderCardPreview);
+    if (currentArticle) renderOpenArticle();
 });
 
 async function renderArticleCards() {
@@ -107,6 +142,8 @@ async function renderArticleCards() {
             throw new Error(`HTTP ${response.status}`);
         }
         const posts = await response.json();
+        posts.sort((a, b) => Number(b.pinned === true || b.file.split('/').pop().startsWith('[T]'))
+            - Number(a.pinned === true || a.file.split('/').pop().startsWith('[T]')));
 
         list.replaceChildren(...posts.map(post => {
             const article = document.createElement('article');
@@ -118,6 +155,7 @@ async function renderArticleCards() {
             const link = document.createElement('a');
             link.href = articleUrl(post.file);
             link.textContent = post.file.split('/').pop()
+                .replace(/^\[T\]/, '')
                 .replace(/\.(md|html)$/i, '')
                 .replace(/^\d{4}-\d{2}-\d{2}[-_\s]+/, '');
             link.addEventListener('click', event => {

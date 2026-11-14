@@ -1,5 +1,6 @@
 import json
 import os
+import re
 
 class ArticleManager:
     def __init__(self):
@@ -10,16 +11,17 @@ class ArticleManager:
         return os.listdir(self.articles_path)
 
     def process_files(self, filename):
-        filepath = os.path.join(self.articles_path, filename)
-        title = filename.split("-")[3].split(".")[0]
-        date = filename.split("-")[0:3]
-        date = "-".join(date)
+        pinned = filename.startswith("[T]")
+        name = filename[3:] if pinned else filename
+        title = re.sub(r"^\d{4}-\d{2}-\d{2}[-_\s]+", "", os.path.splitext(name)[0])
+        date_match = re.match(r"^\d{4}-\d{2}-\d{2}", name)
+        date = date_match.group() if date_match else ""
         filepath = "articles/" + filename
-        return [filepath, title, date]
+        return [filepath, title, date, pinned]
     
     def process_json_files(self, filedata):
-        filepath, title, date = filedata
-        return {"file": filepath, "title": title, "date": date}
+        filepath, title, date, pinned = filedata
+        return {"file": filepath, "title": title, "date": date, "pinned": pinned}
     
     def write_json_file(self, filedata):
         data = self.process_json_files(filedata)

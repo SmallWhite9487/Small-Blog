@@ -1,12 +1,14 @@
 [
     {
-        "file": "articles/2026-11-13-Test 1.md",
-        "title": "Test 1",
-        "date": "2026-11-13"
-    },
-    {
         "file": "articles/2026-11-14-Test 1.md",
         "title": "Test 1",
-        "date": "2026-11-14"
+        "date": "2026-11-14",
+        "pinned": false
+    },
+    {
+        "file": "articles/[T]2026-11-15-\u81ea\u5df1\u7d39\u4ecb.md",
+        "title": "\u81ea\u5df1\u7d39\u4ecb",
+        "date": "2026-11-15",
+        "pinned": true
     }
 ]

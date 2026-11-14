@@ -63,6 +63,7 @@ document.getElementById("secret-toggle").addEventListener("click", function () {
     document.getElementById("footer-divider").classList.toggle("trans", secretMode);
     document.getElementById("banner-progress").classList.toggle("trans", secretMode);
     updateClock();
+    document.dispatchEvent(new Event("secret-mode-change"));
 });
 
 updateClock();
