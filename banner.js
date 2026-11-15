@@ -1,5 +1,5 @@
 const BANNERS = [
-    { banner: "items/Top-Banner-1.jpg", text: "In solitude,<br>where we are least alone.", title: "「ヨスガノソラ」", direction: "r" },
+    { banner: "items/Top-Banner-1.png", text: "In solitude,<br>where we are least alone.", title: "「ヨスガノソラ」", direction: "r" },
     { banner: "items/Top-Banner-2.png", text: "今度は自分が、<br>センパイの穴を埋めてあげたいって", title: "「サノバウィッチ」", direction: "r" },
     { banner: "items/Top-Banner-3.png", text: "行動とは意思だ。<br>意思とはその人の在り方だ。", title: "「ハミダシクリエイティブ」", direction: "l" },
     { banner: "items/Top-Banner-4.png", text: "一緒に生まれたんだし、<br>どっちが先にこはないよね", title: "「春日 野穹」", direction: "l" },

@@ -354,6 +354,15 @@
 .article-content a, .article-excerpt a { /* 文章內容中的連結 */
     color: #58a6ff;
 }
+.article-content a.c-link, .article-excerpt a.c-link {
+    color: inherit;
+    font-weight: bold;
+    text-decoration: underline;
+    transition: background-color 0.2s;
+}
+.article-content a.c-link:hover, .article-excerpt a.c-link:hover {
+    background-color: rgba(88, 166, 255, 0.2);
+}
 .article-content img, .article-excerpt img { /* 文章內容中的圖片 */
     max-width: 100%;
     height: auto;

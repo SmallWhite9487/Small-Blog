@@ -43,13 +43,20 @@ function escapeMarkdownText(text) {
     })[character]);
 }
 
-const nestedCommandPattern = /^c_(?:pronouns|time_counter)\(\s*"(?:[^"\\\r\n]|\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4}))*"\s*,\s*"(?:[^"\\\r\n]|\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4}))*"\s*\)/;
-const MAX_SECRET_DEPTH = 10;
+function escapeHtmlAttribute(value) {
+    return value.replace(/[&<>"']/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[character]);
+}
 
-function parseSecret(source, depth = 0) {
-    if (!source.startsWith('c_secret(')) return null;
-    if (depth >= MAX_SECRET_DEPTH) throw new Error('指令嵌套層數過多');
-    let index = 'c_secret('.length;
+const TWO_ARGUMENT_COMMANDS = ['secret', 'link', 'pronouns', 'time_counter'];
+const MAX_COMMAND_DEPTH = 10;
+
+function parseTwoArgumentCommand(source, name, depth = 0) {
+    const prefix = `c_${name}(`;
+    if (!source.startsWith(prefix)) return null;
+    if (depth >= MAX_COMMAND_DEPTH) throw new Error('指令嵌套層數過多');
+    let index = prefix.length;
     function skipSpaces() {
         while (index < source.length && /\s/.test(source[index])) index++;
     }
@@ -69,12 +76,10 @@ function parseSecret(source, depth = 0) {
                 index += escape[0].length;
                 continue;
             }
-            const remaining = source.slice(index);
-            const nested = parseSecret(remaining, depth + 1);
-            const command = nested ? nested.raw : (nestedCommandPattern.exec(remaining) || [])[0];
-            if (command) {
-                value += command;
-                index += command.length;
+            const nested = parseNestedCommand(source.slice(index), depth + 1);
+            if (nested) {
+                value += nested.raw;
+                index += nested.raw.length;
             } else {
                 if (source[index] === '\n' || source[index] === '\r') return null;
                 value += source[index++];
@@ -82,34 +87,54 @@ function parseSecret(source, depth = 0) {
         }
         return null;
     }
-    const normal = readArgument();
-    if (normal === null) return null;
+    const first = readArgument();
+    if (first === null) return null;
     skipSpaces();
     if (source[index++] !== ',') return null;
-    const secret = readArgument();
-    if (secret === null) return null;
+    const second = readArgument();
+    if (second === null) return null;
     skipSpaces();
     if (source[index++] !== ')') return null;
-    return { type: 'secret', raw: source.slice(0, index), normal, secret };
+    return { raw: source.slice(0, index), first, second };
+}
+
+function parseNestedCommand(source, depth) {
+    for (const name of TWO_ARGUMENT_COMMANDS) {
+        const command = parseTwoArgumentCommand(source, name, depth);
+        if (command) return command;
+    }
+    return null;
+}
+
+function parseSecret(source, depth = 0) {
+    const command = parseTwoArgumentCommand(source, 'secret', depth);
+    return command && {
+        type: 'secret',
+        raw: command.raw,
+        normal: command.first,
+        secret: command.second
+    };
 }
 
 let secretRenderDepth = 0;
-function renderSecretText(text) {
-    if (secretRenderDepth >= MAX_SECRET_DEPTH) throw new Error('指令嵌套層數過多');
+function renderSecretText(text, allowLinks = true) {
+    if (secretRenderDepth >= MAX_COMMAND_DEPTH) throw new Error('指令嵌套層數過多');
     secretRenderDepth++;
     try {
         let result = '';
         let index = 0;
-        const pattern = /c_(?:pronouns|time_counter|secret)\(/g;
+        const pattern = allowLinks
+            ? /c_(?:pronouns|time_counter|link|secret)\(/g
+            : /c_(?:pronouns|time_counter|secret)\(/g;
         let match;
         while ((match = pattern.exec(text))) {
             const remaining = text.slice(match.index);
-            const nested = parseSecret(remaining);
-            const command = nested ? nested.raw : (nestedCommandPattern.exec(remaining) || [])[0];
+            const name = /^c_([a-z_]+)\(/.exec(remaining);
+            const command = name && parseTwoArgumentCommand(remaining, name[1]);
             if (!command) continue;
             result += escapeMarkdownText(text.slice(index, match.index));
-            result += marked.parseInline(command);
-            index = match.index + command.length;
+            result += marked.parseInline(command.raw);
+            index = match.index + command.raw.length;
             pattern.lastIndex = index;
         }
         return result + escapeMarkdownText(text.slice(index));
@@ -121,19 +146,39 @@ function renderSecretText(text) {
 if (window.marked) {
     marked.use({
         extensions: [{
+            name: 'customLink',
+            level: 'inline',
+            start(source) {
+                return source.indexOf('c_link(');
+            },
+            tokenizer(source) {
+                const command = parseTwoArgumentCommand(source, 'link');
+                if (command) {
+                    return {
+                        type: 'customLink',
+                        raw: command.raw,
+                        text: command.first,
+                        url: command.second
+                    };
+                }
+            },
+            renderer(token) {
+                return `<a class="c-link" href="${escapeHtmlAttribute(token.url)}">${renderSecretText(token.text, false)}</a>`;
+            }
+        }, {
             name: 'pronouns',
             level: 'inline',
             start(source) {
                 return source.indexOf('c_pronouns(');
             },
             tokenizer(source) {
-                const match = /^c_pronouns\(\s*("(?:[^"\\\r\n]|\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4}))*")\s*,\s*("(?:[^"\\\r\n]|\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4}))*")\s*\)/.exec(source);
-                if (match) {
+                const command = parseTwoArgumentCommand(source, 'pronouns');
+                if (command) {
                     return {
                         type: 'pronouns',
-                        raw: match[0],
-                        base: JSON.parse(match[1]),
-                        reading: JSON.parse(match[2])
+                        raw: command.raw,
+                        base: command.first,
+                        reading: command.second
                     };
                 }
             },
@@ -159,10 +204,13 @@ if (window.marked) {
                 return source.indexOf('c_time_counter(');
             },
             tokenizer(source) {
-                const match = /^c_time_counter\(\s*"([^"\r\n]*)"\s*,\s*"([^"\r\n]*)"\s*\)/.exec(source);
-                if (match) {
-                    return { type: 'timeCounter', raw: match[0], date: match[1], unit: match[2] };
-                }
+                const command = parseTwoArgumentCommand(source, 'time_counter');
+                if (command) return {
+                    type: 'timeCounter',
+                    raw: command.raw,
+                    date: command.first,
+                    unit: command.second
+                };
             },
             renderer(token) {
                 try {
