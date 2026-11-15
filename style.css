@@ -195,15 +195,20 @@
 }
 .profile-image { /* 個人頭像容器 */
     position: relative;
-    display: inline-block;
+    display: block;
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto;
 }
 .card-avatar { /* 個人頭像 */
     display: block;
-    width: 280px;
-    height: 280px;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
     border-radius: 24px;
     object-fit: cover;
     border: 2px solid #30363d;
+    box-sizing: border-box;
 }
 .profile-name { /* 個人名稱 */
     margin: 16px 0 8px;
@@ -350,6 +355,13 @@
 .article-content.hide-furigana rt,
 .article-content.hide-furigana rp {
     display: none;
+}
+.article-content.focus-furigana rt,
+.article-content.focus-furigana rp {
+    --furigana-focus-x: -10000px;
+    --furigana-focus-y: -10000px;
+    -webkit-mask-image: radial-gradient(circle 90px at var(--furigana-focus-x) var(--furigana-focus-y), #000 0, #000 55px, transparent 90px);
+    mask-image: radial-gradient(circle 90px at var(--furigana-focus-x) var(--furigana-focus-y), #000 0, #000 55px, transparent 90px);
 }
 .article-content a, .article-excerpt a { /* 文章內容中的連結 */
     color: #58a6ff;

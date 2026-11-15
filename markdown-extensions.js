@@ -49,8 +49,31 @@ function escapeHtmlAttribute(value) {
     })[character]);
 }
 
-const TWO_ARGUMENT_COMMANDS = ['secret', 'link', 'pronouns', 'time_counter'];
+const COMMAND_NAMES = ['secret', 'hide', 'link', 'url', 'pronouns', 'ruby', 'time_counter', 'time'];
+const COMMAND_ALIASES = {
+    secret: ['secret', 'hide'],
+    link: ['link', 'url'],
+    pronouns: ['pronouns', 'ruby'],
+    time_counter: ['time_counter', 'time']
+};
 const MAX_COMMAND_DEPTH = 10;
+
+function findCommandStart(source, names) {
+    let start = -1;
+    for (const name of names) {
+        const index = source.indexOf(`c_${name}(`);
+        if (index !== -1 && (start === -1 || index < start)) start = index;
+    }
+    return start === -1 ? undefined : start;
+}
+
+function parseCommand(source, names, depth = 0) {
+    for (const name of names) {
+        const command = parseTwoArgumentCommand(source, name, depth);
+        if (command) return command;
+    }
+    return null;
+}
 
 function parseTwoArgumentCommand(source, name, depth = 0) {
     const prefix = `c_${name}(`;
@@ -99,15 +122,11 @@ function parseTwoArgumentCommand(source, name, depth = 0) {
 }
 
 function parseNestedCommand(source, depth) {
-    for (const name of TWO_ARGUMENT_COMMANDS) {
-        const command = parseTwoArgumentCommand(source, name, depth);
-        if (command) return command;
-    }
-    return null;
+    return parseCommand(source, COMMAND_NAMES, depth);
 }
 
 function parseSecret(source, depth = 0) {
-    const command = parseTwoArgumentCommand(source, 'secret', depth);
+    const command = parseCommand(source, COMMAND_ALIASES.secret, depth);
     return command && {
         type: 'secret',
         raw: command.raw,
@@ -124,8 +143,8 @@ function renderSecretText(text, allowLinks = true) {
         let result = '';
         let index = 0;
         const pattern = allowLinks
-            ? /c_(?:pronouns|time_counter|link|secret)\(/g
-            : /c_(?:pronouns|time_counter|secret)\(/g;
+            ? /c_(?:pronouns|ruby|time_counter|time|link|url|secret|hide)\(/g
+            : /c_(?:pronouns|ruby|time_counter|time|secret|hide)\(/g;
         let match;
         while ((match = pattern.exec(text))) {
             const remaining = text.slice(match.index);
@@ -149,10 +168,10 @@ if (window.marked) {
             name: 'customLink',
             level: 'inline',
             start(source) {
-                return source.indexOf('c_link(');
+                return findCommandStart(source, COMMAND_ALIASES.link);
             },
             tokenizer(source) {
-                const command = parseTwoArgumentCommand(source, 'link');
+                const command = parseCommand(source, COMMAND_ALIASES.link);
                 if (command) {
                     return {
                         type: 'customLink',
@@ -169,10 +188,10 @@ if (window.marked) {
             name: 'pronouns',
             level: 'inline',
             start(source) {
-                return source.indexOf('c_pronouns(');
+                return findCommandStart(source, COMMAND_ALIASES.pronouns);
             },
             tokenizer(source) {
-                const command = parseTwoArgumentCommand(source, 'pronouns');
+                const command = parseCommand(source, COMMAND_ALIASES.pronouns);
                 if (command) {
                     return {
                         type: 'pronouns',
@@ -189,7 +208,7 @@ if (window.marked) {
             name: 'secret',
             level: 'inline',
             start(source) {
-                return source.indexOf('c_secret(');
+                return findCommandStart(source, COMMAND_ALIASES.secret);
             },
             tokenizer(source) {
                 return parseSecret(source) || undefined;
@@ -201,10 +220,10 @@ if (window.marked) {
             name: 'timeCounter',
             level: 'inline',
             start(source) {
-                return source.indexOf('c_time_counter(');
+                return findCommandStart(source, COMMAND_ALIASES.time_counter);
             },
             tokenizer(source) {
-                const command = parseTwoArgumentCommand(source, 'time_counter');
+                const command = parseCommand(source, COMMAND_ALIASES.time_counter);
                 if (command) return {
                     type: 'timeCounter',
                     raw: command.raw,

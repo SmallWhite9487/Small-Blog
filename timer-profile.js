@@ -2,9 +2,9 @@
 var TARGETS = [
     { date: "2027-01-01", name: "新年" },
     { date: "2028-03-16", name: "語校畢業" },
+    { date: "2030-04-30", name: "「治療」", secret: true },
     { date: "2032-03-31", name: "正式畢業" },
-    { date: "2035-04-30", name: "「治療」", secret: true },
-    { date: "2036-03-27", name: "「新生」", secret: true },
+    { date: "2034-03-27", name: "「新生」", secret: true },
 ];
 
 // ===== 隱藏模式 =====

@@ -4,8 +4,12 @@ const content = document.getElementById('article-content');
 const backButton = document.getElementById('back-to-list');
 const furiganaToggle = document.getElementById('show-furigana');
 const preferenceStatus = document.getElementById('reading-preference-status');
-const furiganaPreferenceKey = 'show-furigana';
-let showFurigana = true;
+const furiganaPreferenceKey = 'furigana-mode';
+const legacyFuriganaPreferenceKey = 'show-furigana';
+const furiganaModes = ['off', 'focus', 'on'];
+let furiganaMode = 'off';
+let furiganaFocusPoint = null;
+let furiganaFocusFrame = null;
 let currentRequest;
 let lastLink;
 let currentArticle;
@@ -19,27 +23,99 @@ function reportPreferenceError(error) {
 
 try {
     const preference = localStorage.getItem(furiganaPreferenceKey);
-    if (preference === 'false') showFurigana = false;
+    if (furiganaModes.includes(preference)) {
+        furiganaMode = preference;
+    } else {
+        const legacyPreference = localStorage.getItem(legacyFuriganaPreferenceKey);
+        if (legacyPreference === 'true') furiganaMode = 'on';
+        if (legacyPreference === 'false') furiganaMode = 'off';
+    }
 } catch (error) {
     reportPreferenceError(error);
 }
+
+function clearFuriganaFocus() {
+    furiganaFocusPoint = null;
+    if (furiganaFocusFrame !== null) {
+        cancelAnimationFrame(furiganaFocusFrame);
+        furiganaFocusFrame = null;
+    }
+    content.querySelectorAll('rt, rp').forEach(annotation => {
+        annotation.style.removeProperty('--furigana-focus-x');
+        annotation.style.removeProperty('--furigana-focus-y');
+    });
+}
+
+function updateFuriganaFocus() {
+    furiganaFocusFrame = null;
+    if (furiganaMode !== 'focus' || !furiganaFocusPoint) return;
+    const annotations = Array.from(content.querySelectorAll('rt, rp'));
+    const bounds = annotations.map(annotation => annotation.getBoundingClientRect());
+    annotations.forEach((annotation, index) => {
+        annotation.style.setProperty(
+            '--furigana-focus-x',
+            `${furiganaFocusPoint.x - bounds[index].left}px`
+        );
+        annotation.style.setProperty(
+            '--furigana-focus-y',
+            `${furiganaFocusPoint.y - bounds[index].top}px`
+        );
+    });
+}
+
+function scheduleFuriganaFocus() {
+    if (furiganaMode === 'focus' && furiganaFocusPoint && furiganaFocusFrame === null) {
+        furiganaFocusFrame = requestAnimationFrame(updateFuriganaFocus);
+    }
+}
+
+function setFuriganaFocusPoint(x, y) {
+    if (furiganaMode !== 'focus') return;
+    furiganaFocusPoint = { x, y };
+    scheduleFuriganaFocus();
+}
+
 function updateFurigana() {
-    content.classList.toggle('hide-furigana', !showFurigana);
-    furiganaToggle.setAttribute('aria-pressed', String(showFurigana));
-    furiganaToggle.textContent = showFurigana ? '顯示假名：開' : '顯示假名：關';
+    content.classList.toggle('hide-furigana', furiganaMode === 'off');
+    content.classList.toggle('focus-furigana', furiganaMode === 'focus');
+    furiganaToggle.setAttribute('aria-pressed',
+        furiganaMode === 'focus' ? 'mixed' : String(furiganaMode === 'on'));
+    furiganaToggle.textContent = {
+        off: '顯示假名：關閉',
+        focus: '顯示假名：焦點',
+        on: '顯示假名：開啟'
+    }[furiganaMode];
+    clearFuriganaFocus();
 }
 updateFurigana();
 
 furiganaToggle.addEventListener('click', () => {
-    showFurigana = !showFurigana;
+    furiganaMode = furiganaModes[(furiganaModes.indexOf(furiganaMode) + 1) % furiganaModes.length];
     updateFurigana();
     try {
-        localStorage.setItem(furiganaPreferenceKey, String(showFurigana));
+        localStorage.setItem(furiganaPreferenceKey, furiganaMode);
         preferenceStatus.hidden = true;
     } catch (error) {
         reportPreferenceError(error);
     }
 });
+
+content.addEventListener('pointermove', event => {
+    setFuriganaFocusPoint(event.clientX, event.clientY);
+});
+content.addEventListener('pointerleave', () => {
+    if (!content.contains(document.activeElement)) clearFuriganaFocus();
+});
+content.addEventListener('focusin', event => {
+    if (!(event.target instanceof Element)) return;
+    const bounds = event.target.getBoundingClientRect();
+    setFuriganaFocusPoint(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2);
+});
+content.addEventListener('focusout', event => {
+    if (!event.relatedTarget || !content.contains(event.relatedTarget)) clearFuriganaFocus();
+});
+window.addEventListener('scroll', scheduleFuriganaFocus, { passive: true });
+window.addEventListener('resize', scheduleFuriganaFocus);
 
 function articleUrl(file) {
     return file.split('/').map(encodeURIComponent).join('/');
