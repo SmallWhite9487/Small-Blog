@@ -4,6 +4,8 @@ const content = document.getElementById('article-content');
 const backButton = document.getElementById('back-to-list');
 const furiganaToggle = document.getElementById('show-furigana');
 const preferenceStatus = document.getElementById('reading-preference-status');
+const articleToc = document.getElementById('article-toc');
+const articleTocList = document.getElementById('article-toc-list');
 const furiganaPreferenceKey = 'furigana-mode';
 const legacyFuriganaPreferenceKey = 'show-furigana';
 const furiganaModes = ['off', 'focus', 'on'];
@@ -209,6 +211,58 @@ function resolveArticleUrls(container, post) {
     });
 }
 
+function clearArticleToc() {
+    articleToc.hidden = true;
+    articleTocList.replaceChildren();
+}
+
+function renderMarkdownArticle(source) {
+    if (!window.DOMPurify || !window.marked || !window.markdownExtensionsReady) {
+        throw new Error('文章解析工具載入失敗');
+    }
+    const tokens = marked.lexer(source.replace(/\r\n?|\n/g, '\n'));
+    let line = 1;
+    for (const token of tokens) {
+        if (token.type === 'heading' && token.depth <= 3 &&
+            /^ {0,3}#{1,3}(?:[ \t]|$)/.test(token.raw)) {
+            token.tokens.push({
+                type: 'html',
+                raw: '',
+                text: `<span data-toc-line="${line}"></span>`
+            });
+        }
+        line += (token.raw.match(/\n/g) || []).length;
+    }
+    content.innerHTML = DOMPurify.sanitize(marked.parser(tokens));
+    content.querySelectorAll('h1 > [data-toc-line], h2 > [data-toc-line], h3 > [data-toc-line]').forEach(marker => {
+        const heading = marker.parentElement;
+        const lineNumber = marker.getAttribute('data-toc-line');
+        marker.remove();
+        const title = heading.cloneNode(true);
+        title.querySelectorAll('rt, rp').forEach(annotation => annotation.remove());
+
+        const item = document.createElement('li');
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `toc-level-${heading.tagName.slice(1)}`;
+        const label = document.createElement('span');
+        label.className = 'toc-title';
+        label.textContent = title.textContent.trim() || '（無標題）';
+        const number = document.createElement('span');
+        number.className = 'toc-line';
+        number.textContent = `第 ${lineNumber} 行`;
+        button.append(label, number);
+        button.addEventListener('click', () => {
+            heading.scrollIntoView({ block: 'start' });
+            heading.setAttribute('tabindex', '-1');
+            heading.focus({ preventScroll: true });
+        });
+        item.appendChild(button);
+        articleTocList.appendChild(item);
+    });
+    articleToc.hidden = !articleTocList.children.length;
+}
+
 function renderCardPreview(preview) {
     try {
         const html = articleHtml(preview.post, preview.source);
@@ -255,14 +309,20 @@ async function loadCardPreview(post, excerpt, count) {
 
 function renderOpenArticle() {
     const { post, source } = currentArticle;
+    clearArticleToc();
     try {
         if (!source.trim()) {
             content.textContent = '這篇文章目前沒有內容。';
             return;
         }
-        content.innerHTML = articleHtml(post, source);
+        if (post.file.toLowerCase().endsWith('.html')) {
+            content.innerHTML = articleHtml(post, source);
+        } else {
+            renderMarkdownArticle(source);
+        }
         resolveArticleUrls(content, post);
     } catch (err) {
+        clearArticleToc();
         console.error('載入文章失敗:', err);
         content.textContent = '文章載入失敗，請稍後再試。';
     }
@@ -273,6 +333,7 @@ async function openArticle(post, link) {
     const request = new AbortController();
     currentRequest = request;
     currentArticle = null;
+    clearArticleToc();
     lastLink = link;
     list.hidden = true;
     reader.hidden = false;
@@ -299,6 +360,7 @@ backButton.addEventListener('click', () => {
     reader.hidden = true;
     list.hidden = false;
     currentArticle = null;
+    clearArticleToc();
     updateHtmlPreviewOverflow();
     if (lastLink) lastLink.focus();
 });
