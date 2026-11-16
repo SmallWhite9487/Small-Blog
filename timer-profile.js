@@ -14,7 +14,7 @@ var DEFAULT_NAME =
     "<ruby>Terry <rt>テリー</rt></ruby> <ruby>Weng<rt>オウ</rt></ruby>";
 var SECRET_NAME =
     "<ruby>天音<rt>あまね</rt>　</ruby> <ruby>千穹<rt>ちそら</rt></ruby>";
-var DEFAULT_BIO = "Small White・He/His";
+var DEFAULT_BIO = "Small White・He/Him";
 var SECRET_BIO = "Small White・She/Her";
 
 // ===== 時間格式化 =====
