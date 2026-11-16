@@ -116,10 +116,10 @@
 }
 .secret-toggle { /* 左下角小三角按鈕（透明點擊區域較大，視覺三角很小） */
     position: absolute;
-    left: 2px;
-    bottom: 2px;
-    width: 22px;
-    height: 22px;
+    left: 6px;
+    bottom: 6px;
+    width: 40px;
+    height: 40px;
     padding: 0;
     background: none;
     border: none;
@@ -128,14 +128,14 @@
 .secret-toggle::before { /* 實際顯示的小三角 */
     content: "";
     position: absolute;
-    left: 6px;
-    bottom: 6px;
+    left: 2px;
+    bottom: 2px;
     width: 0;
     height: 0;
     border-left: 10px solid rgba(230, 237, 243, 0.25);
     border-top: 10px solid transparent;
     transition: border-left-color 0.2s;
-    opacity: 0.15;
+    opacity: 0.5;
 }
 .secret-toggle:hover::before { /* 懸停時變亮 */
     border-left-color: rgba(230, 237, 243, 0.7);
@@ -462,6 +462,11 @@ footer { /* 頁腳 */
     margin: 0 auto;
     padding: 0px 0;
     font-size: 12px;
+}
+@media (min-width: 2048px) {
+    .top-banner, .main-layout, footer {
+        width: 50vw;
+    }
 }
 @media (max-width: 700px) {
     footer {
