@@ -132,9 +132,10 @@
     bottom: 0;
     width: 0;
     height: 0;
-    border-left: 24px solid rgba(230, 237, 243, 0.3);
-    border-top: 24px solid transparent;
+    border-left: 30px solid rgba(230, 237, 243, 0.3);
+    border-top: 30px solid transparent;
     transition: border-left-color 0.2s;
+    opacity: 0.25;
 }
 .secret-toggle:hover::before { /* 懸停時變亮 */
     border-left-color: rgba(230, 237, 243, 0.7);
@@ -207,9 +208,6 @@
 .article-toc button { /* 文章目錄按鈕 */
     display: flex;
     width: 100%;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
     padding: 6px 0;
     border: 0;
     background: none;
@@ -227,12 +225,6 @@
 }
 .article-toc .toc-level-2 { padding-left: 12px; } /* 文章目錄二級標題縮排 */
 .article-toc .toc-level-3 { padding-left: 24px; } /* 文章目錄三級標題縮排 */
-.article-toc .toc-line { /* 文章目錄行 */
-    color: #8b949e;
-    font-size: 12px;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
 .profile-card { /* 左側個人資料卡片 */
     background-color: #161b22;
     border: 1px solid #30363d;

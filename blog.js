@@ -221,22 +221,19 @@ function renderMarkdownArticle(source) {
         throw new Error('文章解析工具載入失敗');
     }
     const tokens = marked.lexer(source.replace(/\r\n?|\n/g, '\n'));
-    let line = 1;
     for (const token of tokens) {
         if (token.type === 'heading' && token.depth <= 3 &&
             /^ {0,3}#{1,3}(?:[ \t]|$)/.test(token.raw)) {
             token.tokens.push({
                 type: 'html',
                 raw: '',
-                text: `<span data-toc-line="${line}"></span>`
+                text: '<span data-toc-heading></span>'
             });
         }
-        line += (token.raw.match(/\n/g) || []).length;
     }
     content.innerHTML = DOMPurify.sanitize(marked.parser(tokens));
-    content.querySelectorAll('h1 > [data-toc-line], h2 > [data-toc-line], h3 > [data-toc-line]').forEach(marker => {
+    content.querySelectorAll('h1 > [data-toc-heading], h2 > [data-toc-heading], h3 > [data-toc-heading]').forEach(marker => {
         const heading = marker.parentElement;
-        const lineNumber = marker.getAttribute('data-toc-line');
         marker.remove();
         const title = heading.cloneNode(true);
         title.querySelectorAll('rt, rp').forEach(annotation => annotation.remove());
@@ -248,10 +245,7 @@ function renderMarkdownArticle(source) {
         const label = document.createElement('span');
         label.className = 'toc-title';
         label.textContent = title.textContent.trim() || '（無標題）';
-        const number = document.createElement('span');
-        number.className = 'toc-line';
-        number.textContent = `第 ${lineNumber} 行`;
-        button.append(label, number);
+        button.appendChild(label);
         button.addEventListener('click', () => {
             heading.scrollIntoView({ block: 'start' });
             heading.setAttribute('tabindex', '-1');
