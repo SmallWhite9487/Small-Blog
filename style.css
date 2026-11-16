@@ -7,8 +7,8 @@
 }
 .top-banner { /* 頂部橫幅 */
     position: relative;
-    width: calc(100% - 48px);
-    max-width: 1440px;
+    width: 50vw;
+    max-width: none;
     margin: 20px auto 0;
     border-radius: 12px;
     overflow: hidden;
@@ -144,8 +144,8 @@
     display: flex;
     align-items: flex-start;
     gap: 28px;
-    width: calc(100% - 48px);
-    max-width: 1440px;
+    width: 50vw;
+    max-width: none;
     margin: 28px auto 0;
 }
 .sidebar { /* 左側欄（個人卡＋時間卡） */
@@ -401,12 +401,17 @@
     border: 1px solid #30363d;
     padding: 6px 12px;
 }
-@media (max-width: 700px) {
+@media (max-width: 1400px) {
     .main-layout {
         flex-direction: column;
     }
     .sidebar, .blog-list {
         width: 100%;
+    }
+}
+@media (max-width: 700px) {
+    .top-banner, .main-layout, footer {
+        width: calc(100% - 32px);
     }
     .profile-image {
         max-width: 100%;
@@ -452,11 +457,16 @@ rt { /* ruby 注音標註 */
 footer { /* 頁腳 */
     color: #8b949e;
     text-align: center;
-    width: calc(100% - 48px);
-    max-width: 1440px;
+    width: 50vw;
+    max-width: none;
     margin: 0 auto;
     padding: 0px 0;
     font-size: 12px;
+}
+@media (max-width: 700px) {
+    footer {
+        width: calc(100% - 32px);
+    }
 }
 .footer-divider { /* 頁腳分割線 */
     width: 50%;
