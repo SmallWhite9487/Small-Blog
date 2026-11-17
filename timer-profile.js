@@ -3,7 +3,7 @@ var TARGETS = [
     { date: "2026-12-19", name: "冬休み" },
     { date: "2027-01-01", name: "新年" },
     { date: "2028-03-16", name: "語学学校卒業" },
-    { date: "2029-03-27", name: "「治療」", secret: true },
+    { date: "2028-07-21", name: "「治療」", secret: true },
     { date: "2032-03-31", name: "大学卒業" },
     { date: "2034-03-27", name: "「新生」", secret: true },
 ];

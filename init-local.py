@@ -11,17 +11,37 @@ class ArticleManager:
         return os.listdir(self.articles_path)
 
     def process_files(self, filename):
-        pinned = filename.startswith("[T]")
-        name = filename[3:] if pinned else filename
+        name = filename
+        priority = 0
+        secret = False
+        while True:
+            match = re.match(r"^\[(T[1-3]?|S)\]", name)
+            if not match:
+                break
+            tag = match.group(1)
+            if tag == "S":
+                secret = True
+            else:
+                level = 1 if tag == "T" else int(tag[1:])
+                priority = max(priority, 4 - level)
+            name = name[match.end():]
+        pinned = priority > 0
         title = re.sub(r"^\d{4}-\d{2}-\d{2}[-_\s]+", "", os.path.splitext(name)[0])
         date_match = re.match(r"^\d{4}-\d{2}-\d{2}", name)
         date = date_match.group() if date_match else ""
         filepath = "articles/" + filename
-        return [filepath, title, date, pinned]
+        return [filepath, title, date, pinned, priority, secret]
     
     def process_json_files(self, filedata):
-        filepath, title, date, pinned = filedata
-        return {"file": filepath, "title": title, "date": date, "pinned": pinned}
+        filepath, title, date, pinned, priority, secret = filedata
+        return {
+            "file": filepath,
+            "title": title,
+            "date": date,
+            "pinned": pinned,
+            "priority": priority,
+            "secret": secret
+        }
     
     def write_json_file(self, filedata):
         data = self.process_json_files(filedata)

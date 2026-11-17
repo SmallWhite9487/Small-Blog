@@ -1,9 +1,29 @@
 const BANNERS = [
-    { banner: "items/Top-Banner-1.png", text: "In solitude,<br>where we are least alone.", title: "「ヨスガノソラ」", direction: "r" },
-    { banner: "items/Top-Banner-2.png", text: "今度は自分が、<br>センパイの穴を埋めてあげたいって", title: "「サノバウィッチ」", direction: "r" },
-    { banner: "items/Top-Banner-3.png", text: "行動とは意思だ。<br>意思とはその人の在り方だ。", title: "「ハミダシクリエイティブ」", direction: "l" },
-    { banner: "items/Top-Banner-4.png", text: "一緒に生まれたんだし、<br>どっちが先にこはないよね", title: "「春日 野穹」", direction: "l" },
-    { banner: "items/Top-Banner-5.jpg", text: "本当に本気で何かを成し遂げるとき、<br>人はいつだって孤独です。", title: "「魔女の旅々」", direction: "l" },
+    { banner: "items/Top-banners/Top-Banner-1.png", text: "In solitude,<br>where we are least alone.", title: "「ヨスガノソラ」", direction: "r" },
+    { banner: "items/Top-banners/Top-Banner-2.png", text: "今度は自分が、<br>センパイの穴を埋めてあげたいって", title: "「サノバウィッチ」", direction: "r" },
+    { banner: "items/Top-banners/Top-Banner-3.png", text: "行動とは意思だ。<br>意思とはその人の在り方だ。", title: "「ハミダシクリエイティブ」", direction: "l" },
+    { banner: "items/Top-banners/Top-Banner-4.png", text: "一緒に生まれたんだし、<br>どっちが先にこはないよね", title: "「ヨスガノソラ」", direction: "l" },
+    { banner: "items/Top-banners/Top-Banner-5.jpg", text: "本当に本気で何かを成し遂げるとき、<br>人はいつだって孤独です。", title: "「魔女の旅々」", direction: "l" },
+    { banner: "items/Top-banners/Top-Banner-6.png", text: "一期一會", title: "「茶湯一会集」", direction: "l" },
+    { banner: "items/Top-banners/Top-Banner-7.png", text: "でも音理の心は、<br>永遠にお兄ちゃんだけのもの", title: "「星空鉄道とシロの旅」", direction: "l" },
+    { banner: "items/Top-banners/Top-Banner-8.png", text: "死神と、<br>お茶でもいかが？", title: "「喫茶ステラと死神の蝶」", direction: "l" },
+    { banner: "items/Top-banners/Top-Banner-9.png", text: "雨は嫌いだ。この世界は、ずっと雨だ", title: "「BLEACH」", direction: "r" },
+    { banner: "items/Top-banners/Top-Banner-10.png", text: "さあ、<br>私たちのデートを始めましょう。", title: "「デート・ア・ライブ」", direction: "r" },
+    { banner: "items/Top-banners/Top-Banner-11.png", text: "晴れの日は気分良く、雨の日は憂鬱と教えられたら、<br>そう思い込んでしまう。雨の日だって楽しい事はあるのに。", title: "「新世紀エヴァンゲリオン」", direction: "r" },
+    { banner: "items/Top-banners/Top-Banner-12.png", text: "キミのおかげで未練が生まれた", title: "「喫茶ステラと死神の蝶」", direction: "r" },
+    { banner: "items/Top-banners/Top-Banner-13.png", text: "これは、<br>ゲームであっても、遊びではない。", title: "「ソードアート・オンライン」", direction: "l" },
+    { banner: "items/Top-banners/Top-Banner-14.png", text: "一人ひとりに自分だけの森がある。<br>たぶん私たちはそこへ行ったことがないけれど、それはいつもそこにある。", title: "「ノルウェイの森」", direction: "l" },
+    { banner: "items/Top-banners/Top-Banner-15.png", text: "心の薄汚い旅人は、一体誰か。<br>そう、私です", title: "「魔女の旅々」", direction: "r" },
+    { banner: "items/Top-banners/Top-Banner-16.png", text: "俺みたいな人間は、<br>苦味を感じる資格なんてないんだ。", title: "「天使☆騒々 RE-BOOT!」", direction: "r" },
+    { banner: "items/Top-banners/Top-Banner-17.png", text: "難しい現実なんて、<br>切ればいい！", title: "「ヨスガノソラ」", direction: "r" },
+    { banner: "items/Top-banners/Top-Banner-18.png", text: "家族だから、<br>心配するのは当たり前でしょ", title: "「RIDDLE JOKER」", direction: "r" },
+    { banner: "items/Top-banners/Top-Banner-19.png", text: "All history is man's efforts to realise ideals.", title: "「The New Order」", direction: "l" },
+    { banner: "items/Top-banners/Top-Banner-20.png", text: "嘘つきというものは、<br>いつだって平然とした顔をしているものですよ", title: "「魔女の旅々」", direction: "l" },
+    { banner: "items/Top-banners/Top-Banner-21.png", text: "でも、作った曲も、歌った歌も、それに込めた気持ちも、<br>聞いてくれる人がいなければ、なんの意味もありません", title: "「ハミダシクリエイティブ」", direction: "l" },
+    { banner: "items/Top-banners/Top-Banner-22.png", text: "個性捨てたら、<br>死んでるのと一緒だよ。", title: "「ぼっち・ざ・ろっく！」", direction: "r" },
+    { banner: "items/Top-banners/Top-Banner-23.png", text: "独りになるのが、<br>こわかった……", title: "「ヨスガノソラ」", direction: "l" },
+    { banner: "items/Top-banners/Top-Banner-24.png", text: "この旅は、彼女のなかに、何を残していくのだろう。<br>そして俺に、何を与えてくれるのだろう。", title: "「星空鉄道とシロの旅」", direction: "r" },
+    { banner: "items/Top-banners/Top-Banner-25.png", text: "さあまっすぐ、<br>なりたいわたしになるためにGo!", title: "「まいてつ Last Run!!」", direction: "r" },
 ];
 const BANNER_INTERVAL = 8000;
 const BANNER_TRANSITION = 550;
@@ -67,7 +87,18 @@ Promise.all(BANNERS.map(preloadBanner)).then(results => {
         return;
     }
 
+    let rotationTimer;
+    let isTransitioning = false;
+
+    function scheduleRotation() {
+        clearTimeout(rotationTimer);
+        rotationTimer = setTimeout(rotateBanner, BANNER_INTERVAL);
+    }
+
     function rotateBanner() {
+        if (isTransitioning) return;
+        clearTimeout(rotationTimer);
+        isTransitioning = true;
         let nextIndex = Math.floor(Math.random() * (available.length - 1));
         if (nextIndex >= currentIndex) nextIndex++;
         currentIndex = nextIndex;
@@ -81,10 +112,12 @@ Promise.all(BANNERS.map(preloadBanner)).then(results => {
         setTimeout(() => {
             previous.remove();
             next.classList.remove("entering");
+            isTransitioning = false;
+            scheduleRotation();
         }, BANNER_TRANSITION);
-        setTimeout(rotateBanner, BANNER_INTERVAL);
     }
 
     restartBannerProgress();
-    setTimeout(rotateBanner, BANNER_INTERVAL);
+    scheduleRotation();
+    bannerContainer.addEventListener("click", rotateBanner);
 });

@@ -123,6 +123,23 @@ function articleUrl(file) {
     return file.split('/').map(encodeURIComponent).join('/');
 }
 
+function articleTags(file) {
+    let name = file.split('/').pop();
+    let priority = 0;
+    let secret = false;
+    let match;
+    while ((match = /^\[(T[1-3]?|S)\]/.exec(name))) {
+        if (match[1] === 'S') {
+            secret = true;
+        } else {
+            const level = match[1] === 'T' ? 1 : Number(match[1].slice(1));
+            priority = Math.max(priority, 4 - level);
+        }
+        name = name.slice(match[0].length);
+    }
+    return { name, priority, secret };
+}
+
 function articleHtml(post, source) {
     if (!window.DOMPurify || (!post.file.toLowerCase().endsWith('.html') &&
         (!window.marked || !window.markdownExtensionsReady))) {
@@ -258,6 +275,7 @@ function renderMarkdownArticle(source) {
 }
 
 function renderCardPreview(preview) {
+    preview.article.hidden = preview.post.secret && !secretMode;
     try {
         const html = articleHtml(preview.post, preview.source);
         const text = articleText(html);
@@ -286,12 +304,12 @@ function renderCardPreview(preview) {
     }
 }
 
-async function loadCardPreview(post, excerpt, count) {
+async function loadCardPreview(post, excerpt, count, article) {
     try {
         const response = await fetch(articleUrl(post.file));
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const source = await response.text();
-        const preview = { post, source, excerpt, count };
+        const preview = { post, source, excerpt, count, article };
         cardPreviews.push(preview);
         renderCardPreview(preview);
     } catch (err) {
@@ -304,6 +322,10 @@ async function loadCardPreview(post, excerpt, count) {
 function renderOpenArticle() {
     const { post, source } = currentArticle;
     clearArticleToc();
+    if (post.secret && !secretMode) {
+        content.textContent = '此文章僅在隱藏模式下顯示。';
+        return;
+    }
     try {
         if (!source.trim()) {
             content.textContent = '這篇文章目前沒有內容。';
@@ -360,6 +382,9 @@ backButton.addEventListener('click', () => {
 });
 
 document.addEventListener('secret-mode-change', () => {
+    list.querySelectorAll('.card-blogs[data-secret-only]').forEach(article => {
+        article.hidden = !secretMode;
+    });
     cardPreviews.forEach(renderCardPreview);
     if (currentArticle) renderOpenArticle();
 });
@@ -370,23 +395,33 @@ async function renderArticleCards() {
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        const posts = await response.json();
-        posts.sort((a, b) => Number(b.pinned === true || b.file.split('/').pop().startsWith('[T]'))
-            - Number(a.pinned === true || a.file.split('/').pop().startsWith('[T]')));
+        const posts = (await response.json()).map(post => {
+            const tags = articleTags(post.file);
+            return {
+                ...post,
+                priority: tags.priority || (post.pinned === true ? 3 : 0),
+                secret: tags.secret || post.secret === true,
+                title: tags.name
+                    .replace(/\.(md|html)$/i, '')
+                    .replace(/^\d{4}-\d{2}-\d{2}[-_\s]+/, '')
+            };
+        });
+        posts.sort((a, b) => b.priority - a.priority);
 
         list.replaceChildren(...posts.map(post => {
             const article = document.createElement('article');
             article.className = 'card-blogs';
+            if (post.secret) {
+                article.dataset.secretOnly = 'true';
+                article.hidden = !secretMode;
+            }
 
             const header = document.createElement('div');
             header.className = 'card-header';
             const title = document.createElement('h2');
             const link = document.createElement('a');
             link.href = articleUrl(post.file);
-            link.textContent = post.file.split('/').pop()
-                .replace(/^\[T\]/, '')
-                .replace(/\.(md|html)$/i, '')
-                .replace(/^\d{4}-\d{2}-\d{2}[-_\s]+/, '');
+            link.textContent = post.title;
             link.addEventListener('click', event => {
                 if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
                 event.preventDefault();
@@ -408,7 +443,7 @@ async function renderArticleCards() {
             count.className = 'article-word-count';
             count.textContent = '字數計算中…';
             article.append(header, preview, count);
-            loadCardPreview(post, excerpt, count);
+            loadCardPreview(post, excerpt, count, article);
             return article;
         }));
     } catch (err) {
