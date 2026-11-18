@@ -35,7 +35,7 @@ bannerProgress.style.setProperty("--banner-duration", `${BANNER_INTERVAL}ms`);
 function preloadBanner(banner) {
     return new Promise(resolve => {
         const image = new Image();
-        image.onload = () => resolve(banner);
+        image.onload = () => resolve(image);
         image.onerror = () => {
             console.error("橫幅圖片載入失敗:", banner.banner);
             resolve(null);
@@ -44,11 +44,9 @@ function preloadBanner(banner) {
     });
 }
 
-function createBanner(banner) {
+function createBanner(banner, image) {
     const slide = document.createElement("div");
     slide.className = "banner-slide";
-    const image = document.createElement("img");
-    image.src = banner.banner;
     image.alt = "Image-Top-Banner";
     const text = document.createElement("div");
     text.className = "banner-text" + (banner.direction === "l" || banner.direction === "L" ? " left" : "");
@@ -68,56 +66,89 @@ function restartBannerProgress() {
     bannerProgress.style.animation = "none";
     void bannerProgress.offsetWidth;
     bannerProgress.style.animation = "";
+    bannerProgress.style.animationPlayState = "running";
 }
 
-Promise.all(BANNERS.map(preloadBanner)).then(results => {
-    const available = results.filter(Boolean);
-    if (!available.length) {
-        console.error("沒有可用的橫幅圖片。");
-        return;
+const failedBanners = new Set();
+let bannerQueue = [];
+let lastQueuedBanner = null;
+let currentBanner = null;
+let currentSlide = bannerContainer.querySelector(".banner-slide");
+let rotationTimer;
+let isSwitchingBanner = false;
+bannerProgress.style.animationPlayState = "paused";
+
+function prepareBanner() {
+    if (!bannerQueue.length) {
+        bannerQueue = BANNERS.filter(banner => !failedBanners.has(banner));
+        if (bannerQueue.length === 1 && bannerQueue[0] === currentBanner) return null;
+        for (let index = bannerQueue.length - 1; index > 0; index--) {
+            const random = Math.floor(Math.random() * (index + 1));
+            [bannerQueue[index], bannerQueue[random]] = [bannerQueue[random], bannerQueue[index]];
+        }
+        if (bannerQueue.length > 1 && bannerQueue[0] === lastQueuedBanner) {
+            [bannerQueue[0], bannerQueue[1]] = [bannerQueue[1], bannerQueue[0]];
+        }
     }
+    const banner = bannerQueue.shift();
+    if (!banner) return null;
+    lastQueuedBanner = banner;
+    return { banner, image: preloadBanner(banner) };
+}
 
-    let currentIndex = Math.floor(Math.random() * available.length);
-    let current = createBanner(available[currentIndex]);
-    bannerContainer.querySelector(".banner-slide").replaceWith(current);
+let nextBanner = prepareBanner();
+let followingBanner = prepareBanner();
 
-    if (available.length < 2) {
-        bannerProgress.style.animation = "none";
-        bannerProgress.style.clipPath = "inset(0)";
-        return;
-    }
-
-    let rotationTimer;
-    let isTransitioning = false;
-
-    function scheduleRotation() {
-        clearTimeout(rotationTimer);
-        rotationTimer = setTimeout(rotateBanner, BANNER_INTERVAL);
-    }
-
-    function rotateBanner() {
-        if (isTransitioning) return;
-        clearTimeout(rotationTimer);
-        isTransitioning = true;
-        let nextIndex = Math.floor(Math.random() * (available.length - 1));
-        if (nextIndex >= currentIndex) nextIndex++;
-        currentIndex = nextIndex;
-        const next = createBanner(available[currentIndex]);
-        const previous = current;
-        previous.classList.add("leaving");
-        next.classList.add("entering");
-        bannerContainer.insertBefore(next, bannerProgress);
-        current = next;
-        restartBannerProgress();
-        setTimeout(() => {
-            previous.remove();
-            next.classList.remove("entering");
-            isTransitioning = false;
-            scheduleRotation();
-        }, BANNER_TRANSITION);
-    }
-
+function scheduleBannerRotation() {
     restartBannerProgress();
-    scheduleRotation();
-    bannerContainer.addEventListener("click", rotateBanner);
-});
+    clearTimeout(rotationTimer);
+    rotationTimer = setTimeout(rotateBanner, BANNER_INTERVAL);
+}
+
+async function rotateBanner() {
+    if (isSwitchingBanner) return;
+    isSwitchingBanner = true;
+    clearTimeout(rotationTimer);
+    bannerProgress.style.animationPlayState = "paused";
+    let pending = nextBanner;
+    nextBanner = null;
+    while (pending) {
+        const { banner } = pending;
+        const image = await pending.image;
+        if (!image) {
+            failedBanners.add(banner);
+            pending = followingBanner || prepareBanner();
+            followingBanner = null;
+            continue;
+        }
+        const next = createBanner(banner, image);
+        const previous = currentSlide;
+        const firstSlide = currentBanner === null;
+        currentBanner = banner;
+        currentSlide = next;
+        nextBanner = followingBanner || prepareBanner();
+        followingBanner = null;
+        if (firstSlide) {
+            previous.replaceWith(next);
+            isSwitchingBanner = false;
+            scheduleBannerRotation();
+        } else {
+            previous.classList.add("leaving");
+            next.classList.add("entering");
+            bannerContainer.insertBefore(next, bannerProgress);
+            setTimeout(() => {
+                previous.remove();
+                next.classList.remove("entering");
+                isSwitchingBanner = false;
+                scheduleBannerRotation();
+            }, BANNER_TRANSITION);
+        }
+        return;
+    }
+    console.error("沒有其他可用的橫幅圖片。");
+    if (!currentBanner) currentSlide.textContent = "橫幅圖片載入失敗。";
+    isSwitchingBanner = false;
+}
+
+bannerContainer.addEventListener("click", rotateBanner);
+rotateBanner();

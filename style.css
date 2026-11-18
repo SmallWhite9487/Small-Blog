@@ -96,20 +96,20 @@
     overflow-wrap: anywhere;
 }
 @keyframes banner-slide-in { /* 頂部橫幅滑入動畫 */
-    from {
+    from { /* 滑入動畫起點 */
         opacity: 0;
         transform: translateX(var(--banner-text-start, 100%));
     }
-    to {
+    to { /* 滑入動畫終點 */
         opacity: 1;
         transform: translateX(0);
     }
 }
 @media (prefers-reduced-motion: reduce) { /* 減少動畫模式 */
-    .banner-text, .banner-slide.entering, .banner-slide.leaving {
+    .banner-text, .banner-slide.entering, .banner-slide.leaving { /* 關閉橫幅位移動畫 */
         animation: none;
     }
-    .banner-progress {
+    .banner-progress { /* 減少動畫時直接顯示進度條 */
         animation: none;
         clip-path: inset(0);
     }
@@ -140,7 +140,7 @@
 .secret-toggle:hover::before { /* 懸停時變亮 */
     border-left-color: rgba(230, 237, 243, 0.7);
 }
-.secret-toggle:focus-visible {
+.secret-toggle:focus-visible { /* 隱藏模式按鈕的鍵盤焦點 */
     outline: 2px solid #58a6ff;
     outline-offset: -4px;
 }
@@ -289,7 +289,7 @@
     margin-bottom: 24px;
     transition: background-color 0.2s, border-color 0.2s;
 }
-.card-blogs:hover {
+.card-blogs:hover { /* 部落格卡片懸停效果 */
     background-color: #1c232d;
     border-color: #586574;
 }
@@ -349,7 +349,7 @@
     max-height: 4.8em;
     overflow: hidden;
 }
-.article-excerpt.is-truncated {
+.article-excerpt.is-truncated { /* 摘要截斷時的漸隱效果 */
     -webkit-mask-image: linear-gradient(to bottom, #000 65%, transparent 100%);
     mask-image: linear-gradient(to bottom, #000 65%, transparent 100%);
 }
@@ -420,6 +420,159 @@
     max-width: 100%;
     height: auto;
 }
+.markdown-placeholder { /* Markdown 隱形佔位符：保留一個字寬 */
+    display: inline-block;
+    inline-size: 1em;
+    visibility: hidden;
+}
+.mini-view-sort-toolbar { /* 評分卡排序工具欄 */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    align-items: center;
+    padding: 8px 12px;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    background-color: #161b22;
+    font-size: 14px;
+}
+.mini-view-sort-toolbar select { /* 評分卡排序下拉選單 */
+    margin-inline-start: 4px;
+    padding: 4px 8px;
+    border: 1px solid #6e7681;
+    border-radius: 6px;
+    background-color: #0d1117;
+    color: inherit;
+    font: inherit;
+    color-scheme: dark;
+}
+.mini-view-sort-toolbar select:disabled { /* 原文順序時停用排序方向 */
+    opacity: 0.6;
+}
+.mini-view-card { /* 動漫評分卡片容器 */
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    box-sizing: border-box;
+    padding: 16px;
+    margin: 12px 0;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    background-color: #161b22;
+    color: #e6edf3;
+}
+.mini-view-card > .mini-view-poster,
+.mini-view-poster-trigger { /* 評分卡海報：寬高比 3:4 */
+    display: block;
+    flex: 0 0 auto;
+    width: clamp(150px, 26%, 200px);
+    max-width: 42%;
+    aspect-ratio: 3 / 4;
+    height: auto;
+    border-radius: 6px;
+}
+.mini-view-poster-trigger { /* 海報放大按鈕 */
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: zoom-in;
+}
+.mini-view-card > .mini-view-poster,
+.mini-view-poster-trigger .mini-view-poster { /* 評分卡海報裁切 */
+    object-fit: cover;
+}
+.mini-view-poster-trigger .mini-view-poster { /* 按鈕內的海報縮圖 */
+    display: block;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    border-radius: inherit;
+}
+.mini-view-poster-trigger:focus-visible,
+.poster-preview-close:focus-visible { /* 海報預覽按鈕的鍵盤焦點 */
+    outline: 2px solid #58a6ff;
+    outline-offset: 3px;
+}
+html:has(.poster-preview[open]) { /* 海報預覽期間鎖定背景捲動 */
+    overflow: hidden;
+}
+.poster-preview { /* 置中的海報預覽視窗 */
+    position: fixed;
+    inset: 0;
+    max-width: none;
+    max-height: none;
+    margin: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background-color: #161b22;
+    color: #e6edf3;
+}
+.poster-preview::backdrop { /* 海報預覽遮罩 */
+    background-color: rgba(0, 0, 0, 0.8);
+}
+.poster-preview img { /* 原比例顯示完整海報，限制在視窗範圍內 */
+    display: block;
+    max-width: 90vw;
+    max-height: 90vh;
+    max-height: 90dvh;
+    object-fit: contain;
+}
+.poster-preview-close { /* 海報預覽關閉按鈕 */
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 44px;
+    height: 44px;
+    border: 1px solid #6e7681;
+    border-radius: 50%;
+    background-color: #161b22;
+    color: #e6edf3;
+    font: 24px/1 system-ui, sans-serif;
+    cursor: pointer;
+}
+.mini-view-details { /* 評分卡右側內容 */
+    display: block;
+    flex: 1;
+    min-width: 0;
+}
+.mini-view-title { /* 評分卡標題 */
+    display: block;
+    font-size: 1.1em;
+}
+.mini-view-rating { /* 評分卡星等與分數列 */
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 4px 0 8px;
+    font-size: 14px;
+}
+.mini-view-stars { /* 評分卡五星底層 */
+    display: inline-block;
+    position: relative;
+    color: #6e7681;
+    font-family: Arial, sans-serif;
+    font-size: 20px;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+.mini-view-stars-fill { /* 按分數比例填滿的星星 */
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    color: #e3b341;
+    white-space: nowrap;
+}
+.mini-view-comment { /* 評分卡評論：最多顯示十行，超出時捲動 */
+    display: block;
+    line-height: 1.7;
+    max-height: 17em;
+    max-height: 10lh;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
 .article-content pre, .article-excerpt pre { /* 文章內容中的程式碼區塊 */
     overflow-x: auto;
     padding: 16px;
@@ -443,21 +596,44 @@
     padding: 6px 12px;
 }
 @media (max-width: 1400px) { /* 當視窗寬度小於 1400px 時的響應式設計 */
-    .main-layout {
+    .banner-text { /* 平板與小螢幕的橫幅文字區域 */
+        width: 75%;
+        padding: 12px clamp(12px, 2vw, 28px);
+    }
+    .banner-text h1 { /* 平板與小螢幕的橫幅標題 */
+        font-size: clamp(14px, 2.4vw, 30px);
+        line-height: 1.35;
+    }
+    .banner-text p { /* 平板與小螢幕的橫幅出處 */
+        font-size: clamp(10px, 1.4vw, 16px);
+        line-height: 1.4;
+    }
+    .main-layout { /* 小螢幕改用上下排列 */
         flex-direction: column;
     }
-    .sidebar, .blog-list {
+    .sidebar, .blog-list { /* 上下排列的側欄與文章寬度 */
         width: 100%;
     }
 }
 @media (max-width: 700px) { /* 當視窗寬度小於 700px 時的響應式設計 */
-    .top-banner, .main-layout, footer {
+    .top-banner, .main-layout, footer { /* 手機版頁面左右留白 */
         width: calc(100% - 32px);
     }
-    .profile-image {
+    .banner-text { /* 手機版橫幅文字可使用整張圖片寬度 */
+        width: 100%;
+        padding: 12px;
+    }
+    .banner-text h1 { /* 手機版橫幅標題字級 */
+        margin-bottom: 4px;
+        font-size: clamp(12px, 3.2vw, 20px);
+    }
+    .banner-text p { /* 手機版橫幅出處字級 */
+        font-size: clamp(10px, 2.4vw, 14px);
+    }
+    .profile-image { /* 手機版頭像寬度限制 */
         max-width: 100%;
     }
-    .card-avatar {
+    .card-avatar { /* 手機版頭像等比例縮放 */
         max-width: 100%;
         height: auto;
         box-sizing: border-box;
@@ -505,12 +681,12 @@ footer { /* 頁腳 */
     font-size: 12px;
 }
 @media (min-width: 2048px) { /* 當視窗寬度大於 2048px 時的響應式設計 */
-    .top-banner, .main-layout, footer {
+    .top-banner, .main-layout, footer { /* 高解析度螢幕的內容寬度 */
         width: 50vw;
     }
 }
 @media (max-width: 700px) { /* 當視窗寬度小於 700px 時的響應式設計 */
-    footer {
+    footer { /* 手機版頁腳寬度 */
         width: calc(100% - 32px);
     }
 }

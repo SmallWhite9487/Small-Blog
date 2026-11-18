@@ -6,6 +6,8 @@ const furiganaToggle = document.getElementById('show-furigana');
 const preferenceStatus = document.getElementById('reading-preference-status');
 const articleToc = document.getElementById('article-toc');
 const articleTocList = document.getElementById('article-toc-list');
+const posterPreview = document.getElementById('poster-preview');
+const posterPreviewImage = document.getElementById('poster-preview-image');
 const furiganaPreferenceKey = 'furigana-mode';
 const legacyFuriganaPreferenceKey = 'show-furigana';
 const furiganaModes = ['off', 'focus', 'on'];
@@ -171,7 +173,8 @@ function markdownPreview(source) {
     let truncated = false;
     for (const token of tokens) {
         if (token.type === 'heading') continue;
-        const lines = token.raw.match(/[^\n]*\n|[^\n]+$/g) || [];
+        const raw = token.type === 'sortHelper' ? token.cards.map(card => `${card.raw}\n`).join('') : token.raw;
+        const lines = raw.match(/[^\n]*\n|[^\n]+$/g) || [];
         const containerLine = line => line.replace(/^(?:(?: {0,3}> ?)|(?: {0,3}(?:[-+*]|\d+[.)])\s+))*/, '');
         let fence = null;
         for (let index = 0; index < lines.length; index++) {
@@ -228,6 +231,32 @@ function resolveArticleUrls(container, post) {
     });
 }
 
+function enablePosterPreview() {
+    content.querySelectorAll('.mini-view-card > img.mini-view-poster[src]:not([src=""])').forEach(poster => {
+        const trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = 'mini-view-poster-trigger';
+        trigger.setAttribute('aria-label', `放大${poster.alt}`);
+        trigger.setAttribute('aria-haspopup', 'dialog');
+        poster.before(trigger);
+        trigger.appendChild(poster);
+        trigger.addEventListener('click', event => {
+            event.preventDefault();
+            trigger.focus({ preventScroll: true });
+            posterPreviewImage.alt = poster.alt;
+            posterPreviewImage.src = poster.currentSrc || poster.src;
+            posterPreview.showModal();
+        });
+    });
+}
+
+posterPreview.addEventListener('click', event => {
+    if (event.target === posterPreview) posterPreview.close();
+});
+posterPreview.addEventListener('close', () => {
+    if (!posterPreview.open) posterPreviewImage.removeAttribute('src');
+});
+
 function clearArticleToc() {
     articleToc.hidden = true;
     articleTocList.replaceChildren();
@@ -249,29 +278,89 @@ function renderMarkdownArticle(source) {
         }
     }
     content.innerHTML = DOMPurify.sanitize(marked.parser(tokens));
-    content.querySelectorAll('h1 > [data-toc-heading], h2 > [data-toc-heading], h3 > [data-toc-heading]').forEach(marker => {
-        const heading = marker.parentElement;
-        marker.remove();
-        const title = heading.cloneNode(true);
-        title.querySelectorAll('rt, rp').forEach(annotation => annotation.remove());
+    updateArticleToc();
+    enableCardSorting();
+}
 
+function plainArticleTitle(element) {
+    const title = element.cloneNode(true);
+    title.querySelectorAll('rt, rp').forEach(annotation => annotation.remove());
+    return title.textContent.trim();
+}
+
+function updateArticleToc() {
+    clearArticleToc();
+    const tocEntries = content.querySelectorAll(
+        'h1 > [data-toc-heading], h2 > [data-toc-heading], h3 > [data-toc-heading], ' +
+        '.mini-view-card > .mini-view-details > .mini-view-title'
+    );
+    tocEntries.forEach(entry => {
+        const card = entry.matches('.mini-view-title') ? entry.closest('.mini-view-card') : null;
+        const target = card || entry.parentElement;
+        const level = card ? '2' : target.tagName.slice(1);
         const item = document.createElement('li');
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = `toc-level-${heading.tagName.slice(1)}`;
+        button.className = `toc-level-${level}`;
         const label = document.createElement('span');
         label.className = 'toc-title';
-        label.textContent = title.textContent.trim() || '（無標題）';
+        label.textContent = plainArticleTitle(card ? entry : target) || '（無標題）';
         button.appendChild(label);
         button.addEventListener('click', () => {
-            heading.scrollIntoView({ block: 'start' });
-            heading.setAttribute('tabindex', '-1');
-            heading.focus({ preventScroll: true });
+            target.scrollIntoView({ block: 'start' });
+            target.setAttribute('tabindex', '-1');
+            target.focus({ preventScroll: true });
         });
         item.appendChild(button);
         articleTocList.appendChild(item);
     });
     articleToc.hidden = !articleTocList.children.length;
+}
+
+function enableCardSorting() {
+    const names = new Intl.Collator('ja', { numeric: true, sensitivity: 'base' });
+    content.querySelectorAll('.mini-view-sort > .mini-view-sort-list').forEach(group => {
+        const slots = Array.from(group.children);
+        const cards = slots.filter(node => node.matches('.mini-view-card[data-rating]')).map(node => ({
+            node,
+            name: plainArticleTitle(node.querySelector('.mini-view-title')),
+            rating: Number(node.dataset.rating)
+        }));
+        if (!cards.length) return;
+        group.insertAdjacentHTML('beforebegin', `
+            <div class="mini-view-sort-toolbar" role="group" aria-label="評分卡排序">
+                <label>排序依據
+                    <select class="mini-view-sort-key">
+                        <option value="original">默認</option>
+                        <option value="name">名稱</option>
+                        <option value="rating">評分</option>
+                    </select>
+                </label>
+                <label>排序方向
+                    <select class="mini-view-sort-direction" disabled>
+                        <option value="asc">升序</option>
+                        <option value="desc">降序</option>
+                    </select>
+                </label>
+            </div>`);
+        const toolbar = group.previousElementSibling;
+        const key = toolbar.querySelector('.mini-view-sort-key');
+        const direction = toolbar.querySelector('.mini-view-sort-direction');
+        toolbar.addEventListener('change', () => {
+            direction.disabled = key.value === 'original';
+            const ordered = cards.slice();
+            if (!direction.disabled) {
+                const sign = direction.value === 'desc' ? -1 : 1;
+                ordered.sort((a, b) => sign * (key.value === 'name'
+                    ? names.compare(a.name, b.name)
+                    : a.rating - b.rating));
+            }
+            let index = 0;
+            group.replaceChildren(...slots.map(node => node.matches('.mini-view-card[data-rating]')
+                ? ordered[index++].node : node));
+            updateArticleToc();
+        });
+    });
 }
 
 function renderCardPreview(preview) {
@@ -321,6 +410,7 @@ async function loadCardPreview(post, excerpt, count, article) {
 
 function renderOpenArticle() {
     const { post, source } = currentArticle;
+    if (posterPreview.open) posterPreview.close();
     clearArticleToc();
     if (post.secret && !secretMode) {
         content.textContent = '此文章僅在隱藏模式下顯示。';
@@ -337,6 +427,7 @@ function renderOpenArticle() {
             renderMarkdownArticle(source);
         }
         resolveArticleUrls(content, post);
+        enablePosterPreview();
     } catch (err) {
         clearArticleToc();
         console.error('載入文章失敗:', err);
