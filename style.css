@@ -225,6 +225,15 @@
 }
 .article-toc .toc-level-2 { padding-left: 12px; } /* 文章目錄二級標題縮排 */
 .article-toc .toc-level-3 { padding-left: 24px; } /* 文章目錄三級標題縮排 */
+.article-toc summary { /* 系列子目錄展開按鈕 */
+    padding-block: 6px;
+    color: #58a6ff;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+}
+.article-toc summary:hover { /* 系列子目錄懸停效果 */
+    text-decoration: underline;
+}
 .profile-card { /* 左側個人資料卡片 */
     background-color: #161b22;
     border: 1px solid #30363d;
@@ -448,6 +457,14 @@
 }
 .mini-view-sort-toolbar select:disabled { /* 原文順序時停用排序方向 */
     opacity: 0.6;
+}
+.mini-view-series { /* 系列評分卡分組 */
+    margin-block: 12px;
+    padding-inline-start: 12px;
+    border-inline-start: 2px solid #30363d;
+}
+.mini-view-series-title { /* 系列分組標題 */
+    margin: 0;
 }
 .mini-view-card { /* 動漫評分卡片容器 */
     display: flex;

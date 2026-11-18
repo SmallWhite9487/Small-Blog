@@ -80,6 +80,30 @@ function parseTwoArgumentCommand(source, name, depth = 0) {
     return command && { raw: command.raw, first: command.args[0], second: command.args[1] };
 }
 
+function readQuotedArgument(source, index, depth) {
+    if (source[index++] !== '"') return null;
+    let value = '';
+    while (index < source.length) {
+        if (source[index] === '"') return { value, end: index + 1 };
+        if (source[index] === '\\') {
+            const escape = /^\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4})/.exec(source.slice(index));
+            if (!escape) return null;
+            value += JSON.parse(`"${escape[0]}"`);
+            index += escape[0].length;
+            continue;
+        }
+        const nested = parseNestedCommand(source.slice(index), depth + 1);
+        if (nested) {
+            value += nested.raw;
+            index += nested.raw.length;
+        } else {
+            if (source[index] === '\n' || source[index] === '\r') return null;
+            value += source[index++];
+        }
+    }
+    return null;
+}
+
 function parseCommandArguments(source, name, argumentCount, depth = 0) {
     const prefix = `c_${name}(`;
     if (!source.startsWith(prefix)) return null;
@@ -87,33 +111,6 @@ function parseCommandArguments(source, name, argumentCount, depth = 0) {
     let index = prefix.length;
     function skipSpaces() {
         while (index < source.length && /\s/.test(source[index])) index++;
-    }
-    function readArgument() {
-        skipSpaces();
-        if (source[index++] !== '"') return null;
-        let value = '';
-        while (index < source.length) {
-            if (source[index] === '"') {
-                index++;
-                return value;
-            }
-            if (source[index] === '\\') {
-                const escape = /^\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4})/.exec(source.slice(index));
-                if (!escape) return null;
-                value += JSON.parse(`"${escape[0]}"`);
-                index += escape[0].length;
-                continue;
-            }
-            const nested = parseNestedCommand(source.slice(index), depth + 1);
-            if (nested) {
-                value += nested.raw;
-                index += nested.raw.length;
-            } else {
-                if (source[index] === '\n' || source[index] === '\r') return null;
-                value += source[index++];
-            }
-        }
-        return null;
     }
     const args = [];
     for (let argument = 0; argument < argumentCount; argument++) {
@@ -129,14 +126,51 @@ function parseCommandArguments(source, name, argumentCount, depth = 0) {
             value = number[0];
             index += value.length;
         } else {
-            value = readArgument();
+            const argument = readQuotedArgument(source, index, depth);
+            if (!argument) return null;
+            value = argument.value;
+            index = argument.end;
         }
-        if (value === null) return null;
         args.push(value);
     }
     skipSpaces();
     if (source[index++] !== ')') return null;
     return { raw: source.slice(0, index), args };
+}
+
+function parseMiniViewCard(source) {
+    const command = parseCommandArguments(source, 'mini_view_card', 4);
+    return command && { type: 'miniViewCard', ...command };
+}
+
+function parseSortEntries(source, readEntry) {
+    const entries = [];
+    let index = 0;
+    while (index < source.length) {
+        index += /^\s*/.exec(source.slice(index))[0].length;
+        if (source[index] === ')' && entries.length) return { entries, end: index + 1 };
+        const entry = readEntry(source.slice(index));
+        if (!entry) return null;
+        entries.push(entry);
+        index += entry.raw.length;
+        index += /^\s*/.exec(source.slice(index))[0].length;
+        if (source[index] === ')') return { entries, end: index + 1 };
+        if (source[index++] !== ',') return null;
+    }
+    return null;
+}
+
+function parseMiniViewSeries(source) {
+    const opening = /^c_series\(\s*/.exec(source);
+    if (!opening) return null;
+    const title = readQuotedArgument(source, opening[0].length, 0);
+    if (!title || !title.value.trim()) return null;
+    const separator = /^\s*,/.exec(source.slice(title.end));
+    if (!separator) return null;
+    const start = title.end + separator[0].length;
+    const cards = parseSortEntries(source.slice(start), parseMiniViewCard);
+    if (!cards) return null;
+    return { type: 'miniViewSeries', title: title.value, cards: cards.entries, raw: source.slice(0, start + cards.end) };
 }
 
 function parseNestedCommand(source, depth) {
@@ -183,7 +217,7 @@ function renderSecretText(text, allowLinks = true) {
 if (window.marked) {
     marked.use({
         extensions: [{
-            // c_sort_helper( 與結尾的 ) 各自一行；卡片用英文逗號分隔，末尾逗號可省略。
+            // c_sort_helper 以逗號分隔卡片或 c_series("系列名", 卡片, 卡片)，末尾逗號可省略。
             name: 'sortHelper',
             level: 'block',
             start(source) {
@@ -192,29 +226,22 @@ if (window.marked) {
             tokenizer(source) {
                 const opening = /^ {0,3}c_sort_helper\([ \t]*\n/.exec(source);
                 if (!opening) return;
-                let index = opening[0].length;
-                const cards = [];
-                while (index < source.length) {
-                    index += /^\s*/.exec(source.slice(index))[0].length;
-                    const command = parseCommandArguments(source.slice(index), 'mini_view_card', 4);
-                    if (!command) return;
-                    cards.push({ type: 'miniViewCard', ...command });
-                    index += command.raw.length;
-                    index += /^\s*/.exec(source.slice(index))[0].length;
-                    const rest = source.slice(index);
-                    const closing = /^(?:,\s*)?\)[ \t]*(?:\n|$)/.exec(rest);
-                    if (closing) {
-                        return { type: 'sortHelper', raw: source.slice(0, index + closing[0].length), cards };
-                    }
-                    if (!rest.startsWith(',')) {
-                        console.error('排序區塊格式無效：卡片之間需要英文逗號，最後需加上右括號。');
-                        return;
-                    }
-                    index++;
+                const list = parseSortEntries(source.slice(opening[0].length), text =>
+                    parseMiniViewCard(text) || parseMiniViewSeries(text));
+                const end = list && opening[0].length + list.end;
+                const lineEnd = list && /^[ \t]*(?:\n|$)/.exec(source.slice(end));
+                if (!lineEnd) {
+                    console.error('排序區塊格式無效：請用英文逗號分隔卡片或系列，並確認括號完整。');
+                    return;
                 }
+                return { type: 'sortHelper', raw: source.slice(0, end + lineEnd[0].length), entries: list.entries };
             },
             renderer(token) {
-                return `<div class="mini-view-sort"><div class="mini-view-sort-list">${this.parser.parseInline(token.cards)}</div></div>\n`;
+                const entries = token.entries.map(entry => entry.type === 'miniViewSeries'
+                    ? `<section class="mini-view-series"><h3 class="mini-view-series-title">${renderSecretText(entry.title)}</h3>` +
+                        `<div class="mini-view-series-list">${this.parser.parseInline(entry.cards)}</div></section>`
+                    : this.parser.parseInline([entry])).join('');
+                return `<div class="mini-view-sort"><div class="mini-view-sort-list">${entries}</div></div>\n`;
             }
         }, {
             // [PlaceHolder] 在正文保留一個字寬；作為連結標籤時由 Markdown 處理。
@@ -238,8 +265,7 @@ if (window.marked) {
                 return source.indexOf('c_mini_view_card(');
             },
             tokenizer(source) {
-                const command = parseCommandArguments(source, 'mini_view_card', 4);
-                if (command) return { type: 'miniViewCard', ...command };
+                return parseMiniViewCard(source) || undefined;
             },
             renderer(token) {
                 const [title, ratingText, comment, poster] = token.args;

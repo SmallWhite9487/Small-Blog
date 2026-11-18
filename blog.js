@@ -173,7 +173,10 @@ function markdownPreview(source) {
     let truncated = false;
     for (const token of tokens) {
         if (token.type === 'heading') continue;
-        const raw = token.type === 'sortHelper' ? token.cards.map(card => `${card.raw}\n`).join('') : token.raw;
+        const raw = token.type === 'sortHelper'
+            ? token.entries.flatMap(entry => entry.type === 'miniViewSeries' ? entry.cards : [entry])
+                .map(card => `${card.raw.replace(/\r?\n[ \t]*/g, ' ')}\n`).join('')
+            : token.raw;
         const lines = raw.match(/[^\n]*\n|[^\n]+$/g) || [];
         const containerLine = line => line.replace(/^(?:(?: {0,3}> ?)|(?: {0,3}(?:[-+*]|\d+[.)])\s+))*/, '');
         let fence = null;
@@ -288,17 +291,37 @@ function plainArticleTitle(element) {
     return title.textContent.trim();
 }
 
+const seriesTocDetails = new WeakMap();
+
 function updateArticleToc() {
-    clearArticleToc();
+    const root = document.createDocumentFragment();
+    const seriesLists = new Map();
     const tocEntries = content.querySelectorAll(
         'h1 > [data-toc-heading], h2 > [data-toc-heading], h3 > [data-toc-heading], ' +
+        '.mini-view-series > .mini-view-series-title, ' +
         '.mini-view-card > .mini-view-details > .mini-view-title'
     );
     tocEntries.forEach(entry => {
+        const item = document.createElement('li');
+        if (entry.matches('.mini-view-series-title')) {
+            const series = entry.parentElement;
+            const details = document.createElement('details');
+            details.open = seriesTocDetails.get(series)?.open ?? false;
+            const summary = document.createElement('summary');
+            summary.className = 'toc-level-2';
+            summary.textContent = plainArticleTitle(entry) || '（無標題）';
+            const children = document.createElement('ul');
+            details.append(summary, children);
+            item.appendChild(details);
+            root.appendChild(item);
+            seriesTocDetails.set(series, details);
+            seriesLists.set(series, children);
+            return;
+        }
         const card = entry.matches('.mini-view-title') ? entry.closest('.mini-view-card') : null;
         const target = card || entry.parentElement;
-        const level = card ? '2' : target.tagName.slice(1);
-        const item = document.createElement('li');
+        const children = card && seriesLists.get(card.closest('.mini-view-series'));
+        const level = children ? '3' : card ? '2' : target.tagName.slice(1);
         const button = document.createElement('button');
         button.type = 'button';
         button.className = `toc-level-${level}`;
@@ -312,21 +335,40 @@ function updateArticleToc() {
             target.focus({ preventScroll: true });
         });
         item.appendChild(button);
-        articleTocList.appendChild(item);
+        (children || root).appendChild(item);
     });
+    articleTocList.replaceChildren(root);
     articleToc.hidden = !articleTocList.children.length;
+}
+
+function captureSortList(list) {
+    return Array.from(list.children, node => {
+        const series = node.matches('.mini-view-series');
+        const title = series
+            ? node.querySelector(':scope > .mini-view-series-title')
+            : node.querySelector(':scope > .mini-view-details > .mini-view-title');
+        const seriesList = series ? node.querySelector(':scope > .mini-view-series-list') : null;
+        return {
+            node,
+            name: title ? plainArticleTitle(title) : null,
+            rating: node.matches('.mini-view-card[data-rating]') ? Number(node.dataset.rating) : null,
+            seriesList,
+            children: seriesList ? captureSortList(seriesList) : null
+        };
+    });
+}
+
+function reorderSortList(list, entries, canSort, compare) {
+    const sorted = entries.filter(canSort).sort(compare);
+    let index = 0;
+    list.replaceChildren(...entries.map(entry => (canSort(entry) ? sorted[index++] : entry).node));
 }
 
 function enableCardSorting() {
     const names = new Intl.Collator('ja', { numeric: true, sensitivity: 'base' });
     content.querySelectorAll('.mini-view-sort > .mini-view-sort-list').forEach(group => {
-        const slots = Array.from(group.children);
-        const cards = slots.filter(node => node.matches('.mini-view-card[data-rating]')).map(node => ({
-            node,
-            name: plainArticleTitle(node.querySelector('.mini-view-title')),
-            rating: Number(node.dataset.rating)
-        }));
-        if (!cards.length) return;
+        const entries = captureSortList(group);
+        if (!entries.some(entry => entry.name !== null)) return;
         group.insertAdjacentHTML('beforebegin', `
             <div class="mini-view-sort-toolbar" role="group" aria-label="評分卡排序">
                 <label>排序依據
@@ -348,16 +390,21 @@ function enableCardSorting() {
         const direction = toolbar.querySelector('.mini-view-sort-direction');
         toolbar.addEventListener('change', () => {
             direction.disabled = key.value === 'original';
-            const ordered = cards.slice();
-            if (!direction.disabled) {
-                const sign = direction.value === 'desc' ? -1 : 1;
-                ordered.sort((a, b) => sign * (key.value === 'name'
-                    ? names.compare(a.name, b.name)
-                    : a.rating - b.rating));
+            const sign = direction.value === 'desc' ? -1 : 1;
+            const hasRating = entry => entry.rating !== null;
+            const byRating = (a, b) => sign * (a.rating - b.rating);
+            if (key.value === 'name') {
+                reorderSortList(group, entries, entry => entry.name !== null, (a, b) => sign * names.compare(a.name, b.name));
+            } else if (key.value === 'rating') {
+                reorderSortList(group, entries, hasRating, byRating);
+            } else {
+                group.replaceChildren(...entries.map(entry => entry.node));
             }
-            let index = 0;
-            group.replaceChildren(...slots.map(node => node.matches('.mini-view-card[data-rating]')
-                ? ordered[index++].node : node));
+            for (const { seriesList, children } of entries) {
+                if (!seriesList) continue;
+                if (key.value === 'rating') reorderSortList(seriesList, children, hasRating, byRating);
+                else seriesList.replaceChildren(...children.map(entry => entry.node));
+            }
             updateArticleToc();
         });
     });
