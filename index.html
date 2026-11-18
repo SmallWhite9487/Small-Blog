@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>千穹日記 - ちそらにっき</title>
         <link rel="icon" type="image/png" href="items/icons/icon-web.png">
-        <link rel="stylesheet" href="style.css?v=20261119-8">
+        <link rel="stylesheet" href="style.css?v=20261119-9">
     </head>
 
     <body class="github-body">
@@ -87,13 +87,30 @@
             </form>
         </dialog>
 
+        <!-- 手機版評分卡詳情 -->
+        <dialog id="mini-view-modal" class="mini-view-modal" aria-labelledby="mini-view-modal-title">
+            <div class="mini-view-modal-panel">
+                <header class="mini-view-modal-header">
+                    <img id="mini-view-modal-poster" alt="" hidden>
+                    <div class="mini-view-modal-meta">
+                        <h2 id="mini-view-modal-title"></h2>
+                        <div id="mini-view-modal-rating"></div>
+                    </div>
+                    <form method="dialog">
+                        <button type="submit" class="poster-preview-close" aria-label="關閉作品詳情" autofocus>×</button>
+                    </form>
+                </header>
+                <div id="mini-view-modal-comment" class="mini-view-comment" role="region" aria-label="評論" tabindex="0"></div>
+            </div>
+        </dialog>
+
         <!-- 腳本 -->
         <script src="timer-profile.js"></script>
         <script src="banner.js?v=20261119-2"></script>
         <script src="https://cdn.jsdelivr.net/npm/marked@15.0.12/marked.min.js" integrity="sha384-948ahk4ZmxYVYOc+rxN1H2gM1EJ2Duhp7uHtZ4WSLkV4Vtx5MUqnV+l7u9B+jFv+" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js" integrity="sha384-JEyTNhjM6R1ElGoJns4U2Ln4ofPcqzSsynQkmEc/KGy6336qAZl70tDLufbkla+3" crossorigin="anonymous"></script>
         <script src="markdown-extensions.js?v=20261119-6"></script>
-        <script src="blog.js?v=20261119-4"></script>
+        <script src="blog.js?v=20261119-5"></script>
     </body>
 </html>
 

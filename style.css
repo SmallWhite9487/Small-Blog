@@ -402,27 +402,25 @@
     line-height: 1.7;
     overflow-wrap: anywhere;
 }
-.article-content.hide-furigana rt,
-.article-content.hide-furigana rp { /* 隱藏假名 */
+:is(.article-content, .mini-view-modal).hide-furigana :is(rt, rp) { /* 隱藏假名 */
     display: none;
 }
-.article-content.focus-furigana rt,
-.article-content.focus-furigana rp { /* 聚焦假名 */
+:is(.article-content, .mini-view-modal).focus-furigana :is(rt, rp) { /* 聚焦假名 */
     --furigana-focus-x: -10000px;
     --furigana-focus-y: -10000px;
     -webkit-mask-image: radial-gradient(circle 90px at var(--furigana-focus-x) var(--furigana-focus-y), #000 0, #000 55px, transparent 90px);
     mask-image: radial-gradient(circle 90px at var(--furigana-focus-x) var(--furigana-focus-y), #000 0, #000 55px, transparent 90px);
 }
-.article-content a, .article-excerpt a { /* 文章內容中的連結 */
+.article-content a, .article-excerpt a, .mini-view-modal a { /* 文章內容中的連結 */
     color: #58a6ff;
 }
-.article-content a.c-link, .article-excerpt a.c-link { /* 自訂連結樣式 */
+:is(.article-content, .article-excerpt, .mini-view-modal) a.c-link { /* 自訂連結樣式 */
     color: inherit;
     font-weight: bold;
     text-decoration: underline;
     transition: background-color 0.2s;
 }
-.article-content a.c-link:hover, .article-excerpt a.c-link:hover { /* 自訂連結懸停效果 */
+:is(.article-content, .article-excerpt, .mini-view-modal) a.c-link:hover { /* 自訂連結懸停效果 */
     background-color: rgba(88, 166, 255, 0.2);
 }
 .article-content img, .article-excerpt img { /* 文章內容中的圖片 */
@@ -509,7 +507,7 @@
     outline: 2px solid #58a6ff;
     outline-offset: 3px;
 }
-html:has(.poster-preview[open]) { /* 海報預覽期間鎖定背景捲動 */
+html:has(:is(.poster-preview, .mini-view-modal)[open]) { /* 預覽期間鎖定背景捲動 */
     overflow: hidden;
 }
 .poster-preview { /* 置中的海報預覽視窗 */
@@ -524,7 +522,7 @@ html:has(.poster-preview[open]) { /* 海報預覽期間鎖定背景捲動 */
     background-color: #161b22;
     color: #e6edf3;
 }
-.poster-preview::backdrop { /* 海報預覽遮罩 */
+.poster-preview::backdrop, .mini-view-modal::backdrop { /* 預覽視窗遮罩 */
     background-color: rgba(0, 0, 0, 0.8);
 }
 .poster-preview img { /* 原比例顯示完整海報，限制在視窗範圍內 */
@@ -589,6 +587,72 @@ html:has(.poster-preview[open]) { /* 海報預覽期間鎖定背景捲動 */
     overflow-y: auto;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+}
+.mini-view-modal { /* 手機作品詳情視窗 */
+    position: fixed;
+    inset: 0;
+    box-sizing: border-box;
+    width: min(560px, calc(100% - 24px));
+    height: min(640px, calc(100vh - 24px));
+    height: min(640px, calc(100dvh - 24px));
+    max-width: none;
+    max-height: none;
+    margin: auto;
+    padding: 0;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: #161b22;
+    color: #e6edf3;
+}
+.mini-view-modal-panel { /* 詳情視窗的固定標頭與捲動區 */
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100%;
+}
+.mini-view-modal-header { /* 詳情上方的海報與作品資料 */
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    padding: 12px 58px 12px 12px;
+}
+.mini-view-modal-header img { /* 詳情海報：保留原比例 */
+    width: min(25vw, 112px);
+    max-height: 28vh;
+    max-height: 28dvh;
+    object-fit: contain;
+    border-radius: 6px;
+}
+.mini-view-modal-meta { /* 詳情標題與評分容器 */
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.mini-view-modal-meta h2 { /* 詳情作品標題 */
+    margin: 0;
+    font-size: 1.15rem;
+}
+.mini-view-modal .mini-view-comment { /* 詳情評語：取消十行限制，只捲動下方 */
+    min-height: 0;
+    max-height: none;
+    padding: 14px;
+    border-top: 1px solid #30363d;
+    overscroll-behavior: contain;
+}
+.mini-view-modal .mini-view-comment:focus-visible { /* 詳情評語捲動區的鍵盤焦點 */
+    outline: 2px solid #58a6ff;
+    outline-offset: -2px;
+}
+@media (max-width: 700px), (max-width: 960px) and (hover: none) and (pointer: coarse) { /* 手機評分卡觸控版型 */
+    .article-content .mini-view-card { /* 縮小卡片留白，整張卡可開啟詳情 */
+        gap: 12px;
+        padding: 12px;
+        cursor: pointer;
+    }
+    .article-content .mini-view-poster-trigger { /* 手機海報縮圖與詳情入口 */
+        width: clamp(72px, 30%, 112px);
+        cursor: pointer;
+    }
 }
 .article-content pre, .article-excerpt pre { /* 文章內容中的程式碼區塊 */
     overflow-x: auto;

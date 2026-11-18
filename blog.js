@@ -8,6 +8,12 @@ const articleToc = document.getElementById('article-toc');
 const articleTocList = document.getElementById('article-toc-list');
 const posterPreview = document.getElementById('poster-preview');
 const posterPreviewImage = document.getElementById('poster-preview-image');
+const miniViewModal = document.getElementById('mini-view-modal');
+const miniViewModalPoster = document.getElementById('mini-view-modal-poster');
+const miniViewModalTitle = document.getElementById('mini-view-modal-title');
+const miniViewModalRating = document.getElementById('mini-view-modal-rating');
+const miniViewModalComment = document.getElementById('mini-view-modal-comment');
+const mobileReviewLayout = matchMedia('(max-width: 700px), (max-width: 960px) and (hover: none) and (pointer: coarse)');
 const furiganaPreferenceKey = 'furigana-mode';
 const legacyFuriganaPreferenceKey = 'show-furigana';
 const furiganaModes = ['off', 'focus', 'on'];
@@ -44,16 +50,17 @@ function clearFuriganaFocus() {
         cancelAnimationFrame(furiganaFocusFrame);
         furiganaFocusFrame = null;
     }
-    content.querySelectorAll('rt, rp').forEach(annotation => {
+    [content, miniViewModal].forEach(root => root.querySelectorAll('rt, rp').forEach(annotation => {
         annotation.style.removeProperty('--furigana-focus-x');
         annotation.style.removeProperty('--furigana-focus-y');
-    });
+    }));
 }
 
 function updateFuriganaFocus() {
     furiganaFocusFrame = null;
     if (furiganaMode !== 'focus' || !furiganaFocusPoint) return;
-    const annotations = Array.from(content.querySelectorAll('rt, rp'));
+    const root = miniViewModal.open ? miniViewModal : content;
+    const annotations = Array.from(root.querySelectorAll('rt, rp'));
     const bounds = annotations.map(annotation => annotation.getBoundingClientRect());
     annotations.forEach((annotation, index) => {
         annotation.style.setProperty(
@@ -80,8 +87,10 @@ function setFuriganaFocusPoint(x, y) {
 }
 
 function updateFurigana() {
-    content.classList.toggle('hide-furigana', furiganaMode === 'off');
-    content.classList.toggle('focus-furigana', furiganaMode === 'focus');
+    for (const root of [content, miniViewModal]) {
+        root.classList.toggle('hide-furigana', furiganaMode === 'off');
+        root.classList.toggle('focus-furigana', furiganaMode === 'focus');
+    }
     furiganaToggle.setAttribute('aria-pressed',
         furiganaMode === 'focus' ? 'mixed' : String(furiganaMode === 'on'));
     furiganaToggle.textContent = {
@@ -104,20 +113,23 @@ furiganaToggle.addEventListener('click', () => {
     }
 });
 
-content.addEventListener('pointermove', event => {
-    setFuriganaFocusPoint(event.clientX, event.clientY);
-});
-content.addEventListener('pointerleave', () => {
-    if (!content.contains(document.activeElement)) clearFuriganaFocus();
-});
-content.addEventListener('focusin', event => {
-    if (!(event.target instanceof Element)) return;
-    const bounds = event.target.getBoundingClientRect();
-    setFuriganaFocusPoint(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2);
-});
-content.addEventListener('focusout', event => {
-    if (!event.relatedTarget || !content.contains(event.relatedTarget)) clearFuriganaFocus();
-});
+for (const root of [content, miniViewModal]) {
+    root.addEventListener('pointermove', event => {
+        setFuriganaFocusPoint(event.clientX, event.clientY);
+    });
+    root.addEventListener('pointerleave', () => {
+        if (!root.contains(document.activeElement)) clearFuriganaFocus();
+    });
+    root.addEventListener('focusin', event => {
+        if (!(event.target instanceof Element)) return;
+        const bounds = event.target.getBoundingClientRect();
+        setFuriganaFocusPoint(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2);
+    });
+    root.addEventListener('focusout', event => {
+        if (!event.relatedTarget || !root.contains(event.relatedTarget)) clearFuriganaFocus();
+    });
+}
+miniViewModalComment.addEventListener('scroll', scheduleFuriganaFocus, { passive: true });
 window.addEventListener('scroll', scheduleFuriganaFocus, { passive: true });
 window.addEventListener('resize', scheduleFuriganaFocus);
 
@@ -234,30 +246,88 @@ function resolveArticleUrls(container, post) {
     });
 }
 
+function openMiniViewModal(card, trigger) {
+    const poster = card.querySelector('.mini-view-poster[src]:not([src=""])');
+    const title = card.querySelector('.mini-view-title');
+    const rating = card.querySelector('.mini-view-rating');
+    const comment = card.querySelector('.mini-view-comment');
+    if (!title || !rating || !comment) {
+        console.error('作品詳情缺少標題、評分或評論。', card);
+        return;
+    }
+    if (poster) {
+        miniViewModalPoster.alt = poster.alt;
+        miniViewModalPoster.src = poster.currentSrc || poster.src;
+    } else {
+        miniViewModalPoster.removeAttribute('src');
+    }
+    miniViewModalPoster.hidden = !poster;
+    miniViewModalTitle.replaceChildren(...title.cloneNode(true).childNodes);
+    miniViewModalRating.replaceChildren(rating.cloneNode(true));
+    miniViewModalComment.replaceChildren(...comment.cloneNode(true).childNodes);
+    if (!trigger) card.tabIndex = -1;
+    (trigger || card).focus({ preventScroll: true });
+    miniViewModal.showModal();
+    miniViewModalComment.scrollTop = 0;
+}
+
+function updatePosterPreviewLabels() {
+    content.querySelectorAll('.mini-view-poster-trigger').forEach(trigger => {
+        const poster = trigger.querySelector('.mini-view-poster');
+        const title = trigger.closest('.mini-view-card').querySelector('.mini-view-title');
+        const label = mobileReviewLayout.matches && title
+            ? `查看${plainArticleTitle(title)}詳情`
+            : `放大${poster.alt}`;
+        trigger.setAttribute('aria-label', label);
+    });
+}
+
 function enablePosterPreview() {
     content.querySelectorAll('.mini-view-card > img.mini-view-poster[src]:not([src=""])').forEach(poster => {
         const trigger = document.createElement('button');
         trigger.type = 'button';
         trigger.className = 'mini-view-poster-trigger';
-        trigger.setAttribute('aria-label', `放大${poster.alt}`);
         trigger.setAttribute('aria-haspopup', 'dialog');
         poster.before(trigger);
         trigger.appendChild(poster);
         trigger.addEventListener('click', event => {
             event.preventDefault();
+            if (mobileReviewLayout.matches) {
+                openMiniViewModal(trigger.closest('.mini-view-card'), trigger);
+                return;
+            }
             trigger.focus({ preventScroll: true });
             posterPreviewImage.alt = poster.alt;
             posterPreviewImage.src = poster.currentSrc || poster.src;
             posterPreview.showModal();
         });
     });
+    updatePosterPreviewLabels();
 }
 
-posterPreview.addEventListener('click', event => {
-    if (event.target === posterPreview) posterPreview.close();
+mobileReviewLayout.addEventListener('change', updatePosterPreviewLabels);
+content.addEventListener('click', event => {
+    if (!mobileReviewLayout.matches || event.defaultPrevented || !(event.target instanceof Element)) return;
+    const card = event.target.closest('.mini-view-card');
+    if (!card || event.target.closest('a, button, input, select, textarea, summary')) return;
+    if (window.getSelection()?.isCollapsed === false) return;
+    openMiniViewModal(card, card.querySelector('.mini-view-poster-trigger'));
 });
+
+for (const dialog of [posterPreview, miniViewModal]) {
+    dialog.addEventListener('click', event => {
+        if (event.target === dialog) dialog.close();
+    });
+}
 posterPreview.addEventListener('close', () => {
     if (!posterPreview.open) posterPreviewImage.removeAttribute('src');
+});
+miniViewModal.addEventListener('close', () => {
+    if (miniViewModal.open) return;
+    miniViewModalPoster.removeAttribute('src');
+    miniViewModalTitle.replaceChildren();
+    miniViewModalRating.replaceChildren();
+    miniViewModalComment.replaceChildren();
 });
 
 function clearArticleToc() {
@@ -458,6 +528,7 @@ async function loadCardPreview(post, excerpt, count, article) {
 function renderOpenArticle() {
     const { post, source } = currentArticle;
     if (posterPreview.open) posterPreview.close();
+    if (miniViewModal.open) miniViewModal.close();
     clearArticleToc();
     if (post.secret && !secretMode) {
         content.textContent = '此文章僅在隱藏模式下顯示。';
