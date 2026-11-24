@@ -394,6 +394,158 @@
     color: #e3b341;
     font-size: 14px;
 }
+.local-editor { /* 本地文章編輯器 */
+    margin-top: 16px;
+}
+.editor-filebar, .editor-toolbar { /* 檔案操作與語法工具列 */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.editor-filebar > label { /* 文章選擇欄可在手機縮小 */
+    display: flex;
+    flex: 1 1 230px;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    max-width: 100%;
+}
+.editor-filebar select { /* 防止長檔名撐開編輯器 */
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.local-editor button, .local-editor select, .local-editor input { /* 編輯器按鈕與輸入欄 */
+    max-width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #6e7681;
+    border-radius: 6px;
+    background: #21262d;
+    color: #e6edf3;
+    font: inherit;
+}
+.local-editor button { /* 編輯器操作按鈕 */
+    cursor: pointer;
+}
+.local-editor button:hover { /* 編輯器按鈕懸停 */
+    background: #30363d;
+}
+.editor-toolbar { /* 語法工具列容器 */
+    padding: 10px;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+}
+.editor-toolbar[hidden] { /* 僅預覽時隱藏語法工具列 */
+    display: none;
+}
+.editor-toolbar button { /* 語法工具按鈕 */
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    font-size: 19px;
+    line-height: 1;
+}
+.editor-url-form:not([hidden]) { /* 連結與圖片的工具列網址欄 */
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+}
+.editor-url-form label { /* 網址欄位的手機寬度 */
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+.editor-url-form input { /* 網址輸入可隨容器縮小 */
+    min-width: 0;
+}
+.local-editor-new { /* 本地網站文章列表的新增入口 */
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    border: 1px solid #6e7681;
+    border-radius: 6px;
+    background: #21262d;
+    color: #e6edf3;
+    font: inherit;
+    cursor: pointer;
+}
+#editor-name-row { /* 文章檔名輸入標籤 */
+    margin-bottom: 8px;
+}
+#editor-name-row:not([hidden]) { /* 顯示中的文章檔名 */
+    display: block;
+}
+.editor-error { /* 編輯器錯誤訊息 */
+    color: #ff7b72;
+}
+.editor-hint { /* 正文編輯提示 */
+    color: #8b949e;
+    font-size: 13px;
+}
+.article-content[contenteditable="true"] { /* 連續正文編輯區 */
+    min-height: 6em;
+    outline: none;
+}
+.editor-command { /* 可透過表單修改的指令 */
+    cursor: pointer;
+}
+.editor-command:hover, .editor-command:focus-visible { /* 指令編輯提示 */
+    outline: 2px solid #58a6ff;
+    outline-offset: 2px;
+}
+.article-content .editor-add-card { /* 排序區塊與系列的新增作品按鈕 */
+    margin: 8px 0;
+    padding: 6px 10px;
+    border: 1px solid #6e7681;
+    border-radius: 6px;
+    background: #21262d;
+    color: #e6edf3;
+    font: inherit;
+    cursor: pointer;
+}
+.editor-dialog { /* 指令編輯表單 */
+    box-sizing: border-box;
+    width: min(600px, calc(100vw - 32px));
+    max-height: 85vh;
+    border: 1px solid #6e7681;
+    border-radius: 8px;
+    background: #0d1117;
+    color: #e6edf3;
+}
+.editor-dialog::backdrop { /* 指令表單背景遮罩 */
+    background: rgba(0, 0, 0, 0.7);
+}
+.editor-dialog-fields label { /* 指令參數欄位 */
+    display: block;
+    margin: 12px 0;
+}
+.editor-dialog-fields input, .editor-dialog-fields textarea { /* 指令參數輸入 */
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    margin-top: 4px;
+    padding: 8px;
+    border: 1px solid #6e7681;
+    border-radius: 6px;
+    background: #21262d;
+    color: #e6edf3;
+    font: inherit;
+}
+.editor-dialog-fields textarea { /* 長文字指令參數 */
+    min-height: 100px;
+    resize: vertical;
+}
+.editor-dialog-actions { /* 指令表單操作 */
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+.editor-dialog-error { /* 指令表單驗證錯誤 */
+    color: #ff7b72;
+}
 .back-to-list:hover, .furigana-setting:hover { /* 閱讀器按鈕懸停效果 */
     background-color: #21262d;
 }
